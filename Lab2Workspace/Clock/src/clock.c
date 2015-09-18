@@ -11,18 +11,13 @@
 #include "mb_interface.h"   // provides the microblaze interrupt enables, etc.
 #include "xintc_l.h"        // Provides handy macros for the interrupt controller.
 
-#define MAX_TIME 86400				// Corresponds to time 24:00:00, which rolls over to 00:00:00
-#define SECONDS_IN_HOUR 3600		// There are 3600 seconds in an hour
-#define SECONDS_IN_MINUTE 60		// There are 60 seconds in a minute
+#define MAX_TIME 86400				// Corresponds to time 24:00:00, which rolls over to 00:00:00.
+#define SECONDS_IN_HOUR 3600		// There are 3600 seconds in an hour.
+#define SECONDS_IN_MINUTE 60		// There are 60 seconds in a minute.
+#define TICKS_PER_SECOND 100		// There are 100 FIT ticks per seconds.
+#define BUTTON_DEBOUNCE_WAIT 4		// Wait 4 FIT ticks (40ms) for a button debounce.
 
-/*
-#define SECONDS_AND_UP_BUTTONS 18	//
-#define SECONDS_AND_DOWN_BUTTONS 6	//
-#define MINUTES_AND_UP_BUTTONS 17	//
-#define MINUTES_AND_DOWN_BUTTONS 5	//
-#define HOURS_AND_UP_BUTTONS 24		//
-#define HOURS_AND_DOWN_BUTTONS 12	//*/
-
+// These correspond to the numerical values of the buttons:
 #define MINUTES_BUTTON 1
 #define SECONDS_BUTTON 2
 #define DOWN_BUTTON 4
@@ -32,6 +27,8 @@
 XGpio gpLED;  // This is a handle for the LED GPIO block.
 XGpio gpPB;   // This is a handle for the push-button GPIO block.
 
+// The program uses the following counters.
+// The counters are all initialized to 0.
 static u32 fit_timer_count = 0;
 static u32 debounce_timer_count = 0;
 static u32 auto_inc_timer_count = 0;
@@ -39,18 +36,24 @@ static u32 currentButtonState = 0;
 static s32 cumulative_seconds = 0;
 
 
+// This updates the display of the clock on the screen.
 void updateTiming(){
-	if (cumulative_seconds >= MAX_TIME)
-		cumulative_seconds -= MAX_TIME;
-	else if (cumulative_seconds < 0)
-		cumulative_seconds += MAX_TIME;
-	u32 hours = cumulative_seconds/SECONDS_IN_HOUR;
-	u32 minutes = (cumulative_seconds%SECONDS_IN_HOUR)/SECONDS_IN_MINUTE;
-	u32 seconds = (cumulative_seconds%SECONDS_IN_HOUR)%SECONDS_IN_MINUTE;
-	xil_printf("\r%02d:%02d:%02d", hours, minutes, seconds);
+	// First it checks for rollover and rollunder.
+	if (cumulative_seconds >= MAX_TIME)		// cumulative_seconds exceeds 23:59:59.
+		cumulative_seconds -= MAX_TIME;		// Decrease cumulative_seconds by 1 full day.
+	else if (cumulative_seconds < 0)		// cumulative_seconds is below 00:00:00.
+		cumulative_seconds += MAX_TIME;		// Increase cumulative_seconds by 1 full day.
+	u32 hours = cumulative_seconds/SECONDS_IN_HOUR;							// Compute how many hours are in cumulative_seconds.
+	u32 minutes = (cumulative_seconds%SECONDS_IN_HOUR)/SECONDS_IN_MINUTE;	// Compute how many minutes are remaining.
+	u32 seconds = (cumulative_seconds%SECONDS_IN_HOUR)%SECONDS_IN_MINUTE;	// Compute how many seconds are remaining.
+	xil_printf("\r%02d:%02d:%02d", hours, minutes, seconds);				// Carriage Return to overwrite old clock value.
 }
 
+// This changes the time on the clock based on the button values pressed
 void setClock() {
+	// Update the value of cumulative_seconds based on the buttons pressed.
+	// For example, pressing DOWN_BUTTON and SECONDS_BUTTON decrements cumulative_seconds by one.
+	// Note that invalid button combinations are ignored.
 	if (currentButtonState == DOWN_BUTTON + SECONDS_BUTTON)
 		cumulative_seconds--;
 	else if (currentButtonState == DOWN_BUTTON + MINUTES_BUTTON)
@@ -63,35 +66,45 @@ void setClock() {
 		cumulative_seconds += SECONDS_IN_MINUTE;
 	else if (currentButtonState == UP_BUTTON + HOURS_BUTTON)
 		cumulative_seconds += SECONDS_IN_HOUR;
+	// Once the value of cumulative_seconds has been modified, display the change on the clock.
 	updateTiming();
 }
 
 // This is invoked in response to a timer interrupt.
 // It does 2 things: 1) debounce switches, and 2) advances the time.
 void timer_interrupt_handler() {
+	// Increment the following counters:
 	fit_timer_count++;
 	debounce_timer_count++;
 	auto_inc_timer_count++;
-	if (auto_inc_timer_count >= 50) {
-		if (auto_inc_timer_count >= 100) {
-			if (currentButtonState != 0) {
-				setClock();
-				auto_inc_timer_count = 50;
+	// The following block checks to see if a button press has lasted for 1 second or more.
+	// If it has, then it will update the clock at a rate of twice per second, given the buttons are still pressed.
+	if (auto_inc_timer_count >= TICKS_PER_SECOND/2) {		// auto_inc_timer_count has reached 50ms.
+		if (auto_inc_timer_count >= TICKS_PER_SECOND) {		// auto_inc_timer_count has reached 100ms.
+			if (currentButtonState != 0) {					// At least one button is pressed.
+				setClock();									// Set the clock based on the button values.
+				// Reset auto_inc_timer_count to 50.
+				// Thus once auto_inc_timer_count has waited 1 second, the following code will then execute every half second.
+				auto_inc_timer_count = TICKS_PER_SECOND/2;	
 			}
 			else
 				auto_inc_timer_count = 0;
 		}
 	}
-	if (fit_timer_count >= 100) {
+	// This waits a full second in FIT ticks, and updates cumulative seconds if there are no button presses.
+	if (fit_timer_count >= TICKS_PER_SECOND) {
 		if (currentButtonState == 0) {
-			cumulative_seconds++;
-			updateTiming();
+			cumulative_seconds++;		// Increment cumulative_seconds.
+			updateTiming();				// Update the screen.
 		}
-		fit_timer_count = 0;
+		fit_timer_count = 0;			// Reset the counter.
 	}
-	if (debounce_timer_count == 4) {
-		setClock();
+	// This waits the given amount of time, so that button presses can be properly debounced.
+	if (debounce_timer_count == BUTTON_DEBOUNCE_WAIT) {
+		setClock();			// Set the clock according to the button presses.
 	}
+	// If there are no button presses, do not try to debounce a button.
+	// This means the debounce_timer_count needs to be reset.
 	if (!currentButtonState) {
 		debounce_timer_count = 0;
 	}
@@ -105,6 +118,7 @@ void pb_interrupt_handler() {
   // You need to do something here.
   XGpio_InterruptClear(&gpPB, 0xFFFFFFFF);            // Ack the PB interrupt.
   XGpio_InterruptGlobalEnable(&gpPB);                 // Re-enable PB interrupts.
+  // Because there is a change in the button state, the button counters need to be reinitialized.
   debounce_timer_count = 0;
   auto_inc_timer_count = 0;
 }
