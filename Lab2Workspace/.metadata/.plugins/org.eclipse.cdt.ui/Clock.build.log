@@ -15,7 +15,7 @@ Finished building target: Clock.elf
 Invoking: MicroBlaze Print Size
 mb-size Clock.elf  |tee "Clock.elf.size"
    text	   data	    bss	    dec	    hex	filename
-   8118	    392	   2146	  10656	   29a0	Clock.elf
+   8810	    392	   2150	  11352	   2c58	Clock.elf
 Finished building: Clock.elf.size
 ' '
 Invoking: Xilinx ELF Check

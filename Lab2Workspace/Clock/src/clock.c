@@ -11,20 +11,59 @@
 #include "mb_interface.h"   // provides the microblaze interrupt enables, etc.
 #include "xintc_l.h"        // Provides handy macros for the interrupt controller.
 
+#define MAX_TIME 86400				// Corresponds to time 24:00:00, which rolls over to 00:00:00
+#define SECONDS_IN_HOUR 3600		// There are 3600 seconds in an hour
+#define SECONDS_IN_MINUTE 60		// There are 60 seconds in a minute
+
+/*
+#define SECONDS_AND_UP_BUTTONS 18	//
+#define SECONDS_AND_DOWN_BUTTONS 6	//
+#define MINUTES_AND_UP_BUTTONS 17	//
+#define MINUTES_AND_DOWN_BUTTONS 5	//
+#define HOURS_AND_UP_BUTTONS 24		//
+#define HOURS_AND_DOWN_BUTTONS 12	//*/
+
+#define MINUTES_BUTTON 1
+#define SECONDS_BUTTON 2
+#define DOWN_BUTTON 4
+#define HOURS_BUTTON 8
+#define UP_BUTTON 16
+
 XGpio gpLED;  // This is a handle for the LED GPIO block.
 XGpio gpPB;   // This is a handle for the push-button GPIO block.
 
 static u32 fit_timer_count = 0;
 static u32 debounce_timer_count = 0;
+static u32 auto_inc_timer_count = 0;
 static u32 currentButtonState = 0;
-static u32 cumulative_seconds = 0;
+static s32 cumulative_seconds = 0;
 
 
 void updateTiming(){
-	u32 hours = cumulative_seconds/3600;
-	u32 minutes = (cumulative_seconds%3600)/60;
-	u32 seconds = (cumulative_seconds%3600)%60;
+	if (cumulative_seconds >= MAX_TIME)
+		cumulative_seconds -= MAX_TIME;
+	else if (cumulative_seconds < 0)
+		cumulative_seconds += MAX_TIME;
+	u32 hours = cumulative_seconds/SECONDS_IN_HOUR;
+	u32 minutes = (cumulative_seconds%SECONDS_IN_HOUR)/SECONDS_IN_MINUTE;
+	u32 seconds = (cumulative_seconds%SECONDS_IN_HOUR)%SECONDS_IN_MINUTE;
 	xil_printf("\r%02d:%02d:%02d", hours, minutes, seconds);
+}
+
+void setClock() {
+	if (currentButtonState == DOWN_BUTTON + SECONDS_BUTTON)
+		cumulative_seconds--;
+	else if (currentButtonState == DOWN_BUTTON + MINUTES_BUTTON)
+		cumulative_seconds -= SECONDS_IN_MINUTE;
+	else if (currentButtonState == DOWN_BUTTON + HOURS_BUTTON)
+		cumulative_seconds -= SECONDS_IN_HOUR;
+	else if (currentButtonState == UP_BUTTON + SECONDS_BUTTON)
+		cumulative_seconds++;
+	else if (currentButtonState == UP_BUTTON + MINUTES_BUTTON)
+		cumulative_seconds += SECONDS_IN_MINUTE;
+	else if (currentButtonState == UP_BUTTON + HOURS_BUTTON)
+		cumulative_seconds += SECONDS_IN_HOUR;
+	updateTiming();
 }
 
 // This is invoked in response to a timer interrupt.
@@ -32,13 +71,26 @@ void updateTiming(){
 void timer_interrupt_handler() {
 	fit_timer_count++;
 	debounce_timer_count++;
+	auto_inc_timer_count++;
+	if (auto_inc_timer_count >= 50) {
+		if (auto_inc_timer_count >= 100) {
+			if (currentButtonState != 0) {
+				setClock();
+				auto_inc_timer_count = 50;
+			}
+			else
+				auto_inc_timer_count = 0;
+		}
+	}
 	if (fit_timer_count >= 100) {
-		cumulative_seconds++;
-		updateTiming();
+		if (currentButtonState == 0) {
+			cumulative_seconds++;
+			updateTiming();
+		}
 		fit_timer_count = 0;
 	}
 	if (debounce_timer_count == 4) {
-//		xil_printf("#");
+		setClock();
 	}
 	if (!currentButtonState) {
 		debounce_timer_count = 0;
@@ -54,6 +106,7 @@ void pb_interrupt_handler() {
   XGpio_InterruptClear(&gpPB, 0xFFFFFFFF);            // Ack the PB interrupt.
   XGpio_InterruptGlobalEnable(&gpPB);                 // Re-enable PB interrupts.
   debounce_timer_count = 0;
+  auto_inc_timer_count = 0;
 }
 
 // Main interrupt handler, queries the interrupt controller to see what peripheral
