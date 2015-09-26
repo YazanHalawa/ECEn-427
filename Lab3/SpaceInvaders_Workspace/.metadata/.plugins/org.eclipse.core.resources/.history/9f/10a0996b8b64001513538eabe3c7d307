@@ -1,0 +1,15 @@
+/*
+ * render.h
+ *
+ *  Created on: Sep 26, 2015
+ *      Author: superman
+ */
+
+#ifndef RENDER_H_
+#define RENDER_H_
+
+void drawTank(unsigned int * framePointer0);
+
+void render();
+
+#endif /* RENDER_H_ */

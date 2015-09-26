@@ -1,0 +1,25 @@
+/*
+ * render.c
+ *
+ *  Created on: Sep 26, 2015
+ *      Author: superman
+ */
+#include "render.h"
+#include "globals.h"
+#include "bitmaps.h"
+
+void drawTank(unsigned int * framePointer0) {
+	int row = 0;
+	int col = 0;
+	int current_position = getTankPositionGlobal();
+	for (row = 384; row <= 400; row++) {
+		for (col = current_position; col < current_position + 30; col++) {
+			if (tank_15x8[row - 384] & 2^(col-current_position) == 1)
+				framePointer0[row*640 + col] = GREEN
+		}
+	}
+}
+
+void render() {
+	//drawTank();
+}

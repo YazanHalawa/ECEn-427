@@ -1,0 +1,20 @@
+/*
+ * render.c
+ *
+ *  Created on: Sep 26, 2015
+ *      Author: superman
+ */
+#include "render.h"
+
+void drawTank() {
+	for (int row = 384; row <= 400; row++) {
+		int current_position = getTankPositionGlobal();
+		for (int col = current_position; col < current_position + 30; col++) {
+			framepointer0[row*640 + col] = tank15x8[row - 384][col - curren_position];
+		}
+	}
+}
+
+void render() {
+	drawTank();
+}
