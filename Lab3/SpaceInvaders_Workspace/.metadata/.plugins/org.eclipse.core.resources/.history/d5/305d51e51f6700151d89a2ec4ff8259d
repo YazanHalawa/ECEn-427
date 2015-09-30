@@ -1,0 +1,79 @@
+// Demonstrates one way to handle globals safely in C.
+#include "globals.h"
+
+// Here are the globals.
+static unsigned short tankPosition;
+static point_t tankBulletPosition;
+static point_t alienBlockPosition;
+static bool aliveAliens[55] = { 1 };
+static bool legsOut = true;
+static bool tankBulletFired = false;
+static int erosionDegree = 3;
+
+// Here are the accessors.
+void setTankPositionGlobal(unsigned short val) {
+  tankPosition = val;
+}
+
+bool getBulletStatus(){
+	return tankBulletFired;
+}
+
+void setBulletStatus(bool newStatus){
+	tankBulletFired = newStatus;
+}
+
+int getErosionDegree(){
+	return erosionDegree;
+}
+
+void setErosionDegree(int newDegree){
+	erosionDegree = newDegree;
+}
+
+unsigned short getTankPositionGlobal() {
+  return tankPosition;
+}
+
+void initAliveAliens() {
+	int i=0;
+	for (i=0; i<55; i++) {
+		aliveAliens[i] = 1;
+	}
+	alienBlockPosition.x = 40;
+	alienBlockPosition.y = 60;
+}
+
+point_t getAlienBlockPosition() {
+	return alienBlockPosition;
+}
+
+bool getAliveAlien(unsigned int i){
+	return aliveAliens[i];
+}
+
+void killAlien(unsigned int i){
+	aliveAliens[i] = false;
+}
+
+void switchLegsOut() {
+	legsOut = !legsOut;
+}
+
+bool getLegsOut() {
+	return legsOut;
+}
+
+void setAlienBlockPosition(unsigned int x, unsigned int y) {
+	alienBlockPosition.x = x;
+	alienBlockPosition.y = y;
+}
+
+void setTankBulletPosition(point_t val) {
+  tankBulletPosition.x = val.x;
+  tankBulletPosition.y = val.y;
+}
+
+point_t getTankBulletPosition() {
+  return tankBulletPosition;
+}

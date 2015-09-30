@@ -1,0 +1,33 @@
+// Demonstrates one way to handle globals safely in C.
+#include "globals.h"
+
+// Here are the globals.
+static unsigned short tankPosition;
+static point_t tankBulletPosition;
+static point_t alienBlockPosition;
+static bool aliveAliens[55];
+
+// Here are the accessors.
+void setTankPositionGlobal(unsigned short val) {
+  tankPosition = val;
+}
+
+unsigned short getTankPositionGlobal() {
+  return tankPosition;
+}
+
+void initAliveAliens() {
+	int i=0;
+	for (i=0; i<54; i++) {
+		aliveAliens[i] = 1;
+	}
+}
+
+void setTankBulletPosition(point_t val) {
+  tankBulletPosition.x = val.x;
+  tankBulletPosition.y = val.y;
+}
+
+point_t getTankBulletPosition() {
+  return tankBulletPosition;
+}

@@ -1,0 +1,32 @@
+#ifndef globals_h
+#define globals_h
+#include <stdbool.h>
+#define BLACK 0x00000000;
+#define GREEN 0x0000FF00;
+typedef struct {
+	unsigned short x;
+	unsigned short y;
+	struct point_t* point_t_new(unsigned short x, unsigned short y){
+		point_t* p = malloc(sizeof(point_t));
+		p->x = x;
+		p->y = y;
+		return p;
+	}
+} point_t;
+
+void setTankPositionGlobal(unsigned short val);
+unsigned short getTankPositionGlobal();
+
+void setTankBulletPosition(point_t val);
+point_t getTankBulletPosition();
+
+//////////// Another way to do it without structs. //////////////
+void setTankBulletPositionX(unsigned short val);
+void setTankBulletPositionY(unsigned short val);
+
+void initAliveAliens();
+
+unsigned short getTankBulletPositionX();
+unsigned short getTankBulletPositionY();
+
+#endif

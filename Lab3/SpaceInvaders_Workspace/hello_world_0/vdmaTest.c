@@ -32,7 +32,7 @@
 #define DEBUG
 void print(char *str);
 
-#define FRAME_BUFFER_0_ADDR 0xC0000000  // Starting location in DDR where we will store the images that we display.
+#define FRAME_BUFFER_0_ADDR 0xC1000000  // Starting location in DDR where we will store the images that we display.
 #define MAX_SILLY_TIMER 10000000;
 
 int main()
@@ -159,20 +159,72 @@ int main()
          if (input == '4') {
         	 xil_printf("move tank left\n\r");
         	 setTankPositionGlobal(getTankPositionGlobal() - 5);
-        	 drawTank(framePointer0);
+        	 drawTank(false, 0, 0, framePointer0);
          }
          if (input == '6') {
 			 xil_printf("move tank right\n\r");
 			 setTankPositionGlobal(getTankPositionGlobal() + 5);
-			 drawTank(framePointer0);
+			 drawTank(false, 0, 0, framePointer0);
 		  }
          if (input == '7') {
         	 xil_printf(" please select which bunker to erode\n\r");
         	 input = getchar();
         	 if (input =='0' || input == '1' || input == '2' || input == '3' ) {
-        		 erodeBunker(framePointer0, input, 0, 0);
+        		 // Check current Erosion state
+        		 int erosionState = getErosionDegree();
+        		 if (erosionState <-1 || erosionState > 3){
+    				 xil_printf("invalid erosion state\n\r");
+        		 }
+        		 else if (erosionState == 0){
+        			 xil_printf("Bunker already eroded fully\n\r");
+        		 }
+        		 else{
+        			 erodeBunker(erosionState, framePointer0, input, 0, 0);
+        		 }
         	 } else {
         		 xil_printf(" please enter a valid bunker\n\r");
+        	 }
+         }
+         if (input == '8') {
+        	 xil_printf("update alien position\n\r");
+        	 drawAliens(framePointer0);
+         }
+
+         if (input == '2') {
+        	 xil_printf(" please select an alien between 00 and 54: ");
+        	 input = (unsigned int)getchar();
+        	 unsigned int input2 = (unsigned int) getchar();
+        	 input = ((input-48)*10 + (input2-48));
+        	 xil_printf("%d\n\r", input);
+        	 killAlien(input);
+        	 drawAliens(framePointer0);
+         }
+
+         if (input == '5') {
+        	 if (!getBulletStatus()){
+            	 xil_printf("tank bullet fired\n\r");
+        		 setBulletStatus(true);
+        		 point_t bullet;
+        		 bullet.x = getTankPositionGlobal() + 15;
+        		 bullet.y = 410;
+        		 setTankBulletPosition(bullet);
+        		 drawTankBullet(false, framePointer0);
+        	 }
+        	 else{
+            	 xil_printf("A Tank Bullet already is in motion\n\r");
+        	 }
+         }
+         if (input == '9') {
+        	 xil_printf("update all bullets\n\r");
+        	 if (getBulletStatus()){
+        		 point_t tank_bullet;
+        		 tank_bullet.x = getTankBulletPosition().x;
+        		 tank_bullet.y = getTankBulletPosition().y-3;
+        		 setTankBulletPosition(tank_bullet);
+        		 drawTankBullet(true, framePointer0);
+        	 }
+        	 else{
+        		 xil_printf("No bullet has been fired yet\n\r");
         	 }
          }
      }

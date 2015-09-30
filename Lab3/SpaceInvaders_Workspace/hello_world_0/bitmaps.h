@@ -237,4 +237,69 @@ static const int bunkerDamage3_6x6[] = {
 		packWord6(1,1,1,1,1,1)
 };
 
+static const int S_6x5[] = {
+		packWord6(1,1,1,1,1,0),
+		packWord6(0,0,0,0,0,1),
+		packWord6(0,1,1,1,1,0),
+		packWord6(1,0,0,0,0,0),
+		packWord6(0,1,1,1,1,1)
+};
+
+static const int C_6x5[] = {
+		packWord6(1,1,1,1,1,0),
+		packWord6(0,0,0,0,0,1),
+		packWord6(0,0,0,0,0,1),
+		packWord6(0,0,0,0,0,1),
+		packWord6(1,1,1,1,1,0)
+};
+
+static const int O_6x5[] = {
+		packWord6(0,1,1,1,1,0),
+		packWord6(1,0,0,0,0,1),
+		packWord6(1,0,0,0,0,1),
+		packWord6(1,0,0,0,0,1),
+		packWord6(0,1,1,1,1,0)
+};
+
+static const int R_6x5[] = {
+		packWord6(0,1,1,1,1,1),
+		packWord6(1,0,0,0,0,1),
+		packWord6(0,1,1,1,1,1),
+		packWord6(1,0,0,0,0,1),
+		packWord6(1,0,0,0,0,1)
+};
+
+static const int E_6x5[] = {
+		packWord6(1,1,1,1,1,1),
+		packWord6(0,0,0,0,0,1),
+		packWord6(0,1,1,1,1,1),
+		packWord6(0,0,0,0,0,1),
+		packWord6(1,1,1,1,1,1)
+};
+
+static const int L_6x5[] = {
+		packWord6(0,0,0,0,0,1),
+		packWord6(0,0,0,0,0,1),
+		packWord6(0,0,0,0,0,1),
+		packWord6(0,0,0,0,0,1),
+		packWord6(1,1,1,1,1,1)
+};
+
+static const int I_6x5[] = {
+		packWord6(0,0,0,0,0,1),
+		packWord6(0,0,0,0,0,1),
+		packWord6(0,0,0,0,0,1),
+		packWord6(0,0,0,0,0,1),
+		packWord6(0,0,0,0,0,1)
+};
+
+
+static const int V_6x5[] = {
+		packWord6(1,0,0,0,0,1),
+		packWord6(1,0,0,0,0,1),
+		packWord6(1,0,0,0,0,1),
+		packWord6(0,1,0,0,1,0),
+		packWord6(0,0,1,1,0,0)
+};
+
 #endif /* BITMAPS_H_ */
