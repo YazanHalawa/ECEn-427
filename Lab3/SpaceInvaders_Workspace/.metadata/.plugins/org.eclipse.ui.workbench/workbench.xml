@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <workbench progressCount="20" version="2.0">
 <workbenchAdvisor/>
-<window height="991" width="1694" x="0" y="25">
+<window height="1160" maximized="true" width="960" x="0" y="0">
 <fastViewData fastViewLocation="1024"/>
 <perspectiveBar>
 <itemSize x="160"/>
@@ -44,29 +44,29 @@
 </folder>
 </info>
 </editorArea>
-<editor activePart="true" focus="true" id="org.eclipse.cdt.ui.editor.CEditor" name="render.c" partName="render.c" path="C:/Users/superman/Desktop/SpaceInvaders_Workspace/hello_world_0/render.c" title="render.c" tooltip="hello_world_0/render.c" workbook="DefaultEditorWorkbook">
+<editor id="org.eclipse.cdt.ui.editor.CEditor" name="render.c" partName="render.c" path="C:/Users/superman/Desktop/SpaceInvaders_Workspace/hello_world_0/render.c" title="render.c" tooltip="hello_world_0/render.c" workbook="DefaultEditorWorkbook">
 <input factoryID="org.eclipse.ui.part.FileEditorInputFactory" path="/hello_world_0/render.c"/>
-<editorState selectionHorizontalPixel="0" selectionLength="0" selectionOffset="1786" selectionTopPixel="816"/>
+<editorState selectionHorizontalPixel="0" selectionLength="0" selectionOffset="13354" selectionTopPixel="6766"/>
 </editor>
-<editor id="org.eclipse.cdt.ui.editor.CEditor" name="globals.c" partName="globals.c" path="C:/Users/superman/Desktop/SpaceInvaders_Workspace/hello_world_0/globals.c" title="globals.c" tooltip="hello_world_0/globals.c" workbook="DefaultEditorWorkbook">
+<editor activePart="true" focus="true" id="org.eclipse.cdt.ui.editor.CEditor" name="globals.c" partName="globals.c" path="C:/Users/superman/Desktop/SpaceInvaders_Workspace/hello_world_0/globals.c" title="globals.c" tooltip="hello_world_0/globals.c" workbook="DefaultEditorWorkbook">
 <input factoryID="org.eclipse.ui.part.FileEditorInputFactory" path="/hello_world_0/globals.c"/>
-<editorState selectionHorizontalPixel="0" selectionLength="0" selectionOffset="456" selectionTopPixel="51"/>
+<editorState selectionHorizontalPixel="0" selectionLength="0" selectionOffset="802" selectionTopPixel="238"/>
 </editor>
 <editor id="org.eclipse.cdt.ui.editor.CEditor" name="globals.h" partName="globals.h" path="C:/Users/superman/Desktop/SpaceInvaders_Workspace/hello_world_0/globals.h" title="globals.h" tooltip="hello_world_0/globals.h" workbook="DefaultEditorWorkbook">
 <input factoryID="org.eclipse.ui.part.FileEditorInputFactory" path="/hello_world_0/globals.h"/>
-<editorState selectionHorizontalPixel="0" selectionLength="0" selectionOffset="427" selectionTopPixel="0"/>
+<editorState selectionHorizontalPixel="0" selectionLength="0" selectionOffset="757" selectionTopPixel="10"/>
 </editor>
 <editor id="org.eclipse.cdt.ui.editor.CEditor" name="vdmaTest.c" partName="vdmaTest.c" path="C:/Users/superman/Desktop/SpaceInvaders_Workspace/hello_world_0/vdmaTest.c" title="vdmaTest.c" tooltip="hello_world_0/vdmaTest.c" workbook="DefaultEditorWorkbook">
 <input factoryID="org.eclipse.ui.part.FileEditorInputFactory" path="/hello_world_0/vdmaTest.c"/>
-<editorState selectionHorizontalPixel="0" selectionLength="0" selectionOffset="7761" selectionTopPixel="2758"/>
+<editorState selectionHorizontalPixel="0" selectionLength="0" selectionOffset="9985" selectionTopPixel="3325"/>
 </editor>
 <editor id="org.eclipse.cdt.ui.editor.CEditor" name="bitmaps.h" partName="bitmaps.h" path="C:/Users/superman/Desktop/SpaceInvaders_Workspace/hello_world_0/bitmaps.h" title="bitmaps.h" tooltip="hello_world_0/bitmaps.h" workbook="DefaultEditorWorkbook">
 <input factoryID="org.eclipse.ui.part.FileEditorInputFactory" path="/hello_world_0/bitmaps.h"/>
-<editorState selectionHorizontalPixel="0" selectionLength="0" selectionOffset="9265" selectionTopPixel="3464"/>
+<editorState selectionHorizontalPixel="0" selectionLength="14" selectionOffset="10974" selectionTopPixel="4991"/>
 </editor>
 <editor id="org.eclipse.cdt.ui.editor.CEditor" name="render.h" partName="render.h" path="C:/Users/superman/Desktop/SpaceInvaders_Workspace/hello_world_0/render.h" title="render.h" tooltip="hello_world_0/render.h" workbook="DefaultEditorWorkbook">
 <input factoryID="org.eclipse.ui.part.FileEditorInputFactory" path="/hello_world_0/render.h"/>
-<editorState selectionHorizontalPixel="0" selectionLength="0" selectionOffset="484" selectionTopPixel="0"/>
+<editorState selectionHorizontalPixel="0" selectionLength="51" selectionOffset="601" selectionTopPixel="0"/>
 </editor>
 <editor id="org.eclipse.cdt.ui.editor.CEditor" name="platform.h" partName="platform.h" path="C:/Users/superman/Desktop/SpaceInvaders_Workspace/hello_world_0/platform.h" title="platform.h" tooltip="hello_world_0/platform.h" workbook="DefaultEditorWorkbook">
 <input factoryID="org.eclipse.ui.part.FileEditorInputFactory" path="/hello_world_0/platform.h"/>
@@ -94,6 +94,7 @@
 <view id="org.eclipse.ui.views.ProblemView" partName="Problems">
 <viewState PRIMARY_SORT_FIELD="org.eclipse.ui.ide.severityAndDescriptionField" categoryGroup="org.eclipse.ui.ide.severity" markerContentGenerator="org.eclipse.ui.ide.problemsGenerator" partName="Problems">
 <expanded>
+<category IMemento.internal.id="Warnings (1 item)"/>
 <category IMemento.internal.id="Warnings"/>
 <category IMemento.internal.id="Errors"/>
 </expanded>
@@ -228,162 +229,161 @@
 <workingSets/>
 <navigationHistory>
 <editors>
-<editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" path="/hello_world_0/render.c"/>
-<editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" path="/hello_world_0/vdmaTest.c"/>
 <editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" path="/hello_world_0/globals.c"/>
-<editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" path="/hello_world_0/render.h"/>
-<editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" path="/hello_world_0/bitmaps.h"/>
+<editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" path="/hello_world_0/render.c"/>
 <editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" path="/hello_world_0/globals.h"/>
+<editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" path="/hello_world_0/bitmaps.h"/>
+<editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" path="/hello_world_0/render.h"/>
 </editors>
-<item historyLabel="render.c" index="0">
+<item historyLabel="render.c" index="1">
+<position info="not_deleted" x="13269" y="0"/>
+</item>
+<item historyLabel="render.h" index="4">
+<position info="not_deleted" x="601" y="51"/>
+</item>
+<item historyLabel="render.c" index="1">
+<position info="not_deleted" x="13269" y="0"/>
+</item>
+<item historyLabel="render.c" index="1">
 <position/>
 </item>
-<item historyLabel="render.c" index="0">
-<position info="not_deleted" x="1481" y="0"/>
+<item historyLabel="globals.c" index="0">
+<position info="not_deleted" x="1196" y="0"/>
 </item>
-<item historyLabel="render.c" index="0">
-<position info="not_deleted" x="1423" y="0"/>
+<item historyLabel="globals.c" index="0">
+<position info="not_deleted" x="1289" y="0"/>
 </item>
-<item historyLabel="bitmaps.h" index="4">
-<position info="not_deleted" x="8698" y="17"/>
+<item historyLabel="globals.c" index="0">
+<position info="not_deleted" x="1322" y="0"/>
 </item>
-<item historyLabel="render.c" index="0">
+<item historyLabel="render.c" index="1">
 <position/>
 </item>
-<item historyLabel="globals.c" index="2">
-<position info="not_deleted" x="349" y="0"/>
+<item historyLabel="bitmaps.h" index="3">
+<position info="not_deleted" x="10974" y="14"/>
 </item>
-<item historyLabel="bitmaps.h" index="4">
-<position info="not_deleted" x="8698" y="17"/>
-</item>
-<item historyLabel="render.c" index="0">
+<item historyLabel="render.c" index="1">
 <position/>
 </item>
-<item historyLabel="render.c" index="0">
-<position info="not_deleted" x="1337" y="0"/>
+<item historyLabel="globals.c" index="0">
+<position info="not_deleted" x="1322" y="0"/>
 </item>
-<item historyLabel="render.c" index="0">
-<position info="not_deleted" x="2221" y="0"/>
+<item historyLabel="render.c" index="1">
+<position info="not_deleted" x="13334" y="0"/>
 </item>
-<item historyLabel="vdmaTest.c" index="1">
-<position info="not_deleted" x="8144" y="0"/>
+<item historyLabel="globals.h" index="2">
+<position info="not_deleted" x="791" y="0"/>
 </item>
-<item historyLabel="render.c" index="0">
-<position info="not_deleted" x="2621" y="0"/>
+<item historyLabel="globals.h" index="2">
+<position info="not_deleted" x="789" y="0"/>
 </item>
-<item historyLabel="bitmaps.h" index="4">
-<position info="not_deleted" x="8698" y="17"/>
+<item historyLabel="globals.c" index="0">
+<position info="not_deleted" x="1322" y="0"/>
 </item>
-<item historyLabel="render.c" index="0">
-<position info="not_deleted" x="2163" y="0"/>
+<item historyLabel="render.c" index="1">
+<position info="not_deleted" x="13496" y="0"/>
 </item>
-<item historyLabel="bitmaps.h" index="4">
-<position info="not_deleted" x="8907" y="17"/>
+<item historyLabel="globals.c" index="0">
+<position info="not_deleted" x="1324" y="0"/>
 </item>
-<item historyLabel="render.c" index="0">
-<position info="not_deleted" x="2321" y="0"/>
+<item historyLabel="render.c" index="1">
+<position info="not_deleted" x="13646" y="0"/>
 </item>
-<item historyLabel="bitmaps.h" index="4">
-<position info="not_deleted" x="9116" y="17"/>
+<item historyLabel="globals.c" index="0">
+<position info="not_deleted" x="650" y="0"/>
 </item>
-<item historyLabel="render.c" index="0">
-<position info="not_deleted" x="2479" y="0"/>
+<item historyLabel="render.c" index="1">
+<position info="not_deleted" x="13646" y="0"/>
 </item>
-<item historyLabel="bitmaps.h" index="4">
-<position info="not_deleted" x="9325" y="17"/>
+<item historyLabel="globals.c" index="0">
+<position info="not_deleted" x="675" y="0"/>
 </item>
-<item historyLabel="render.c" index="0">
-<position info="not_deleted" x="1296" y="129"/>
+<item historyLabel="render.h" index="4">
+<position info="not_deleted" x="601" y="51"/>
 </item>
-<item historyLabel="render.h" index="3">
-<position info="not_deleted" x="484" y="0"/>
+<item historyLabel="render.c" index="1">
+<position info="not_deleted" x="13394" y="0"/>
 </item>
-<item historyLabel="render.c" index="0">
-<position info="not_deleted" x="2073" y="0"/>
+<item historyLabel="globals.c" index="0">
+<position info="not_deleted" x="650" y="0"/>
 </item>
-<item historyLabel="vdmaTest.c" index="1">
-<position info="not_deleted" x="8058" y="0"/>
+<item historyLabel="render.c" index="1">
+<position info="not_deleted" x="13510" y="0"/>
 </item>
-<item historyLabel="bitmaps.h" index="4">
-<position info="not_deleted" x="9325" y="17"/>
+<item historyLabel="globals.h" index="2">
+<position info="not_deleted" x="789" y="0"/>
 </item>
-<item historyLabel="globals.c" index="2">
-<position info="not_deleted" x="349" y="0"/>
+<item historyLabel="globals.c" index="0">
+<position info="not_deleted" x="650" y="0"/>
 </item>
-<item historyLabel="globals.h" index="5">
-<position info="not_deleted" x="427" y="0"/>
+<item historyLabel="render.c" index="1">
+<position info="not_deleted" x="13646" y="0"/>
 </item>
-<item historyLabel="globals.c" index="2">
-<position info="not_deleted" x="349" y="0"/>
+<item historyLabel="globals.c" index="0">
+<position info="not_deleted" x="650" y="0"/>
 </item>
-<item historyLabel="bitmaps.h" index="4">
-<position info="not_deleted" x="9325" y="17"/>
+<item historyLabel="render.c" index="1">
+<position info="not_deleted" x="13646" y="0"/>
 </item>
-<item historyLabel="globals.c" index="2">
-<position info="not_deleted" x="349" y="0"/>
+<item historyLabel="globals.c" index="0">
+<position info="not_deleted" x="650" y="0"/>
 </item>
-<item historyLabel="render.c" index="0">
-<position info="not_deleted" x="2073" y="0"/>
+<item historyLabel="globals.c" index="0">
+<position info="not_deleted" x="802" y="0"/>
 </item>
-<item historyLabel="vdmaTest.c" index="1">
-<position info="not_deleted" x="7982" y="0"/>
+<item historyLabel="render.c" index="1">
+<position info="not_deleted" x="13646" y="0"/>
 </item>
-<item historyLabel="render.c" index="0">
-<position info="not_deleted" x="2635" y="0"/>
+<item historyLabel="render.c" index="1">
+<position info="not_deleted" x="13646" y="0"/>
 </item>
-<item historyLabel="vdmaTest.c" index="1">
-<position info="not_deleted" x="8364" y="0"/>
+<item historyLabel="globals.h" index="2">
+<position info="not_deleted" x="789" y="0"/>
 </item>
-<item historyLabel="render.c" index="0">
-<position info="not_deleted" x="2249" y="0"/>
+<item historyLabel="globals.c" index="0">
+<position info="not_deleted" x="679" y="126"/>
 </item>
-<item historyLabel="globals.c" index="2">
-<position info="not_deleted" x="349" y="0"/>
+<item historyLabel="globals.h" index="2">
+<position info="not_deleted" x="757" y="0"/>
 </item>
-<item historyLabel="render.h" index="3">
-<position info="not_deleted" x="484" y="0"/>
+<item historyLabel="render.c" index="1">
+<position info="not_deleted" x="13510" y="0"/>
 </item>
-<item historyLabel="vdmaTest.c" index="1">
-<position info="not_deleted" x="7761" y="0"/>
+<item historyLabel="globals.c" index="0">
+<position info="not_deleted" x="730" y="0"/>
 </item>
-<item historyLabel="bitmaps.h" index="4">
-<position info="not_deleted" x="9325" y="17"/>
+<item historyLabel="render.c" index="1">
+<position info="not_deleted" x="13443" y="0"/>
 </item>
-<item historyLabel="render.c" index="0">
-<position info="not_deleted" x="2598" y="0"/>
+<item historyLabel="globals.c" index="0">
+<position info="not_deleted" x="1263" y="16"/>
 </item>
-<item historyLabel="globals.c" index="2">
-<position info="not_deleted" x="349" y="0"/>
+<item historyLabel="globals.c" index="0">
+<position/>
 </item>
-<item historyLabel="vdmaTest.c" index="1">
-<position info="not_deleted" x="7761" y="0"/>
+<item historyLabel="globals.c" index="0">
+<position info="not_deleted" x="1322" y="0"/>
 </item>
-<item historyLabel="globals.c" index="2">
-<position info="not_deleted" x="349" y="0"/>
+<item historyLabel="render.c" index="1">
+<position info="not_deleted" x="13359" y="0"/>
 </item>
-<item historyLabel="render.c" index="0">
-<position info="not_deleted" x="2598" y="0"/>
+<item historyLabel="globals.c" index="0">
+<position info="not_deleted" x="1195" y="14"/>
 </item>
-<item historyLabel="vdmaTest.c" index="1">
-<position info="not_deleted" x="7761" y="0"/>
+<item historyLabel="render.c" index="1">
+<position info="not_deleted" x="13354" y="0"/>
 </item>
-<item historyLabel="bitmaps.h" index="4">
-<position info="not_deleted" x="9325" y="17"/>
+<item historyLabel="globals.h" index="2">
+<position info="not_deleted" x="757" y="0"/>
 </item>
-<item historyLabel="globals.h" index="5">
-<position info="not_deleted" x="427" y="0"/>
+<item historyLabel="globals.c" index="0">
+<position info="not_deleted" x="1195" y="14"/>
 </item>
-<item historyLabel="globals.c" index="2">
-<position info="not_deleted" x="456" y="0"/>
+<item historyLabel="globals.c" index="0">
+<position info="not_deleted" x="1100" y="0"/>
 </item>
-<item historyLabel="render.c" index="0">
-<position info="not_deleted" x="1866" y="5"/>
-</item>
-<item historyLabel="bitmaps.h" index="4">
-<position info="not_deleted" x="9265" y="0"/>
-</item>
-<item active="true" historyLabel="render.c" index="0">
-<position info="not_deleted" x="1866" y="5"/>
+<item active="true" historyLabel="globals.c" index="0">
+<position info="not_deleted" x="1176" y="0"/>
 </item>
 </navigationHistory>
 <input factoryID="org.eclipse.ui.internal.model.ResourceFactory" path="/" type="8"/>
@@ -391,6 +391,9 @@
 <workbenchWindowAdvisor/>
 <actionBarAdvisor/>
 <trimLayout>
+<trimArea IMemento.internal.id="16384">
+<trimItem IMemento.internal.id="topLeft"/>
+</trimArea>
 <trimArea IMemento.internal.id="128">
 <trimItem IMemento.internal.id="org.eclipse.ui.internal.WorkbenchWindow.topBar"/>
 </trimArea>
@@ -398,6 +401,7 @@
 <trimItem IMemento.internal.id="org.eclise.ui.internal.FastViewBar"/>
 <trimItem IMemento.internal.id="org.eclipse.jface.action.StatusLineManager"/>
 <trimItem IMemento.internal.id="org.eclipse.ui.internal.progress.ProgressRegion"/>
+<trimItem IMemento.internal.id="bottom"/>
 </trimArea>
 </trimLayout>
 </window>

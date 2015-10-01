@@ -9,6 +9,7 @@
 #include "bitmaps.h"
 
 static unsigned int old_position = 20;
+static int aliensStillMovingHorizontally = 1;
 
 void drawTank(bool staticTank, int startRow, int startCol, unsigned int * framePointer0) {
 	int row = 0;
@@ -311,7 +312,25 @@ void resetAliens(unsigned int * framePointer0) {
 
 void drawAliens(unsigned int * framePointer0) {
 	resetAliens(framePointer0);
-	setAlienBlockPosition(getAlienBlockPosition().x + 5, getAlienBlockPosition().y);
+	int farthestLeftAlienPosition = getAlienBlockPosition().x + ((getFarthestLeftAlienColumn()) * 36);
+	//xil_printf(" ---- farthestLeftAlienPosition is %d\n\r", farthestLeftAlienPosition);
+	int farthestRightAlienPosition = getAlienBlockPosition().x + ((getFarthestRightAlienColumn() + 1) * 36);
+	if ((farthestLeftAlienPosition < 20 || farthestRightAlienPosition > 620) && aliensStillMovingHorizontally) {
+		//xil_printf("moving aliens DOWN\n\r");
+		setAlienBlockPosition(getAlienBlockPosition().x, getAlienBlockPosition().y + 5);
+		switchAliensDirection();
+		aliensStillMovingHorizontally = 0;
+	} else {
+		if (getAliensDirection()) {
+			//xil_printf("moving aliens right\n\r");
+			setAlienBlockPosition(getAlienBlockPosition().x + 5, getAlienBlockPosition().y);
+		} else {
+			//xil_printf("moving aliens left\n\r");
+			setAlienBlockPosition(getAlienBlockPosition().x - 5, getAlienBlockPosition().y);
+			//xil_printf("alien block position at %d, %d\n\r", getAlienBlockPosition().x, getAlienBlockPosition().y);
+		}
+		aliensStillMovingHorizontally = 1;
+	}
 	if (getLegsOut()) {
 		drawTopAliens(framePointer0);
 		drawMiddleAliens(framePointer0);
@@ -323,6 +342,91 @@ void drawAliens(unsigned int * framePointer0) {
 	}
 	switchLegsOut();
 }
+
+void drawTBulletA(bool reset, unsigned int * framePointer0) {
+	int i;
+	for (i = 0; i < getAlienBulletsNum(); i++){
+		int rowStart = getAlienBullet(i).y;
+		int colStart = getAlienBullet(i).x + 10;
+		int row, col;
+		for (row = rowStart; row < rowStart + 10; row++){
+			for (col = colStart; col < colStart + 6; col++){
+				if ((t_bullet_3x5_A[(row - rowStart)/2] & (1<<((col-colStart)/2))) == 0){
+					framePointer0[row*640 + col] = BLACK;
+				}
+				else{
+					if (reset) {
+						framePointer0[row*640 + col] = BLACK;
+					} else {
+						framePointer0[row*640 + col] = WHITE;
+					}
+				}
+			}
+		}
+	}
+}
+
+void drawTBulletB(bool reset, unsigned int * framePointer0) {
+	int i;
+	for (i = 0; i < getAlienBulletsNum(); i++){
+		int rowStart = getAlienBullet(i).y;
+		int colStart = getAlienBullet(i).x + 10;
+		int row, col;
+		for (row = rowStart; row < rowStart + 10; row++){
+			for (col = colStart; col < colStart + 6; col++){
+				if ((t_bullet_3x5_B[(row - rowStart)/2] & (1<<((col-colStart)/2))) == 0){
+					framePointer0[row*640 + col] = BLACK;
+				}
+				else{
+					if (reset) {
+						framePointer0[row*640 + col] = BLACK;
+					} else {
+						framePointer0[row*640 + col] = WHITE;
+					}
+				}
+			}
+		}
+	}
+}
+
+void drawSBulletA(unsigned int * framePointer0) {
+
+}
+
+void drawSBulletB(unsigned int * framePointer0) {
+
+}
+
+void alienFire(int alienNumber,unsigned int * framePointer0) {
+	short alienXPos = getAlienBlockPosition().x + (alienNumber-44)*36;
+	short alienYPos = getAlienBlockPosition().y + 96 + 16;
+	point_t newPoint;
+	newPoint.x = alienXPos;
+	newPoint.y = alienYPos;
+	addAlienBullet(newPoint);
+	drawTBulletA(false, framePointer0);
+}
+
+void updateBullets(unsigned int * framePointer0) {
+	int i;
+	for (i=0; i<getAlienBulletsNum(); i++) {
+		if (getAlienBullet(index).y >= 440) {
+			drawTBulletA(true, framePointer0);
+
+		}
+		else if (getCurrentBulletA()) {
+			drawTBulletA(true, framePointer0);
+			shiftAlienBullet(i);
+			drawTBulletB(false, framePointer0);
+		} else {
+			drawTBulletB(true, framePointer0);
+			shiftAlienBullet(i);
+			drawTBulletA(false, framePointer0);
+		}
+		switchCurrentBulletA();
+	}
+}
+
 
 void drawTankBullet(bool reset, unsigned int * framePointer0){
 	int row;
@@ -339,7 +443,7 @@ void drawTankBullet(bool reset, unsigned int * framePointer0){
 
 		}
 	}
-	if (getTankBulletPosition().y > 480){
+	if (getTankBulletPosition().y < 0 || getTankBulletPosition().y > 480){
 		// Blank the bullet
 		for (row = 0 ; row < 3; row++){
 			framePointer0[(row)*640 + getTankBulletPosition().x] = BLACK;

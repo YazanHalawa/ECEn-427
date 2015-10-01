@@ -21,6 +21,7 @@
  */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include "platform.h"
 #include "xparameters.h"
 #include "xaxivdma.h"
@@ -175,9 +176,9 @@ int main()
         		 if (erosionState <-1 || erosionState > 3){
     				 xil_printf("invalid erosion state\n\r");
         		 }
-        		 else if (erosionState == 0){
-        			 xil_printf("Bunker already eroded fully\n\r");
-        		 }
+//        		 else if (erosionState == 0){
+//        			 xil_printf("Bunker already eroded fully\n\r");
+//        		 }
         		 else{
         			 erodeBunker(erosionState, framePointer0, input, 0, 0);
         		 }
@@ -186,7 +187,7 @@ int main()
         	 }
          }
          if (input == '8') {
-        	 xil_printf("update alien position\n\r");
+        	// xil_printf("update alien position\n\r");
         	 drawAliens(framePointer0);
          }
 
@@ -198,6 +199,12 @@ int main()
         	 xil_printf("%d\n\r", input);
         	 killAlien(input);
         	 drawAliens(framePointer0);
+         }
+
+         if (input == '3') {
+        	 xil_printf("alien from bottom row randomly selected to fire bullet\n\r");
+        	 int shooting_alien = (rand()%11) + 44;
+        	 alienFire(shooting_alien, framePointer0);
          }
 
          if (input == '5') {
@@ -221,7 +228,9 @@ int main()
         		 tank_bullet.x = getTankBulletPosition().x;
         		 tank_bullet.y = getTankBulletPosition().y-3;
         		 setTankBulletPosition(tank_bullet);
+        		// xil_printf("tank bull pos is %d", getTankBulletPosition().y);
         		 drawTankBullet(true, framePointer0);
+        		 updateBullets(framePointer0);
         	 }
         	 else{
         		 xil_printf("No bullet has been fired yet\n\r");

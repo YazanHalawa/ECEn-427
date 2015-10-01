@@ -2,12 +2,13 @@
 #define globals_h
 #include <stdbool.h>
 #include <stdint.h>
+#include <stdio.h>
 #define BLACK 0x00000000;
 #define GREEN 0x0000FF00;
 #define WHITE 0xFFFFFFFF;
 typedef struct {
-	unsigned short x;
-	unsigned short y;
+	short x;
+	short y;
 } point_t;
 
 void setTankPositionGlobal(unsigned short val);
@@ -16,8 +17,24 @@ unsigned short getTankPositionGlobal();
 void setTankBulletPosition(point_t val);
 point_t getTankBulletPosition();
 
+void switchAliensDirection();
+bool getAliensDirection();
+
+int getFarthestRightAlienColumn();
+
+int getFarthestLeftAlienColumn();
+
 int getErosionDegree();
 void setErosionDegree(int newDegree);
+
+void addAlienBullet();
+int getAlienBulletsNum();
+point_t getAlienBullet(int index);
+void shiftAlienBullet(int index);
+
+bool getCurrentBulletA();
+
+void switchCurrentBulletA();
 
 void initAliveAliens();
 point_t getAlienBlockPosition();

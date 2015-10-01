@@ -16,6 +16,10 @@ void destroyPartOfBunker(const int array[], unsigned int * framePointer0, int Bu
 
 void drawAliens(unsigned int * framePointer0);
 
+void alienFire(int alienNumber,unsigned int * framePointer0);
+
+void updateBullets(unsigned int * framePointer0);
+
 void drawTankBullet(bool reset, unsigned int * framePointer0);
 
 void render(unsigned int * framePointer0);

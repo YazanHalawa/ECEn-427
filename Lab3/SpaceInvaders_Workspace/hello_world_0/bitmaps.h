@@ -44,6 +44,9 @@
 #define packWord6(b5,b4,b3,b2,b1,b0) \
 		((b5  << 5 ) | (b4  << 4 ) | (b3  << 3 ) | (b2  << 2 ) | (b1  << 1 ) | (b0  << 0 ) )
 
+#define packWord3(b2,b1,b0) \
+		((b2  << 2 ) | (b1  << 1 ) | (b0  << 0 ))
+
 int topOutAlienSymbol[ALIEN_HEIGHT] =
 {
 		packWord32(0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0),
@@ -201,7 +204,7 @@ static const int bunker_24x18[] =
 // These are the blocks that comprise the bunker and each time a bullet
 // strikes one of these blocks, you erod the block as you sequence through
 // these patterns.
-static const int bunkerDamage0_6x6[] = {
+static const int bunkerDamage1_6x6[] = {
 		packWord6(0,1,1,0,0,0),
 		packWord6(0,0,0,0,0,1),
 		packWord6(1,1,0,1,0,0),
@@ -210,7 +213,7 @@ static const int bunkerDamage0_6x6[] = {
 		packWord6(0,0,0,0,1,0)
 };
 
-static const int bunkerDamage1_6x6[] = {
+static const int bunkerDamage2_6x6[] = {
 		packWord6(1,1,1,0,1,0),
 		packWord6(1,0,1,0,0,1),
 		packWord6(1,1,0,1,1,1),
@@ -219,7 +222,7 @@ static const int bunkerDamage1_6x6[] = {
 		packWord6(0,1,1,0,1,0)
 };
 
-static const int bunkerDamage2_6x6[] = {
+static const int bunkerDamage3_6x6[] = {
 		packWord6(1,1,1,1,1,1),
 		packWord6(1,0,1,1,0,1),
 		packWord6(1,1,0,1,1,1),
@@ -228,13 +231,13 @@ static const int bunkerDamage2_6x6[] = {
 		packWord6(1,1,1,1,1,1)
 };
 
-static const int bunkerDamage3_6x6[] = {
-		packWord6(1,1,1,1,1,1),
-		packWord6(1,1,1,1,1,1),
-		packWord6(1,1,1,1,1,1),
-		packWord6(1,1,1,1,1,1),
-		packWord6(1,1,1,1,1,1),
-		packWord6(1,1,1,1,1,1)
+static const int bunkerDamage0_6x6[] = {
+		packWord6(0,0,0,0,0,0),
+		packWord6(0,0,0,0,0,0),
+		packWord6(0,0,0,0,0,0),
+		packWord6(0,0,0,0,0,0),
+		packWord6(0,0,0,0,0,0),
+		packWord6(0,0,0,0,0,0)
 };
 
 static const int S_6x5[] = {
@@ -300,6 +303,38 @@ static const int V_6x5[] = {
 		packWord6(1,0,0,0,0,1),
 		packWord6(0,1,0,0,1,0),
 		packWord6(0,0,1,1,0,0)
+};
+
+static const int t_bullet_3x5_A [] = {
+		packWord3(0,1,0),
+		packWord3(0,1,0),
+		packWord3(0,1,0),
+		packWord3(1,1,1),
+		packWord3(0,1,0)
+};
+
+static const int t_bullet_3x5_B [] = {
+		packWord3(0,1,0),
+		packWord3(1,1,1),
+		packWord3(0,1,0),
+		packWord3(0,1,0),
+		packWord3(0,1,0)
+};
+
+static const int s_bullet_3x5_A [] = {
+		packWord3(1,0,0),
+		packWord3(0,1,0),
+		packWord3(0,0,1),
+		packWord3(0,1,0),
+		packWord3(1,0,0)
+};
+
+static const int s_bullet_3x5_B [] = {
+		packWord3(0,0,1),
+		packWord3(0,1,0),
+		packWord3(1,0,0),
+		packWord3(0,1,0),
+		packWord3(0,0,1)
 };
 
 #endif /* BITMAPS_H_ */

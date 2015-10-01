@@ -1,6 +1,9 @@
 // Demonstrates one way to handle globals safely in C.
 #include "globals.h"
 
+#define LEFT 0;
+#define RIGHT 1;
+
 // Here are the globals.
 static unsigned short tankPosition;
 static point_t tankBulletPosition;
@@ -8,7 +11,67 @@ static point_t alienBlockPosition;
 static bool aliveAliens[55] = { 1 };
 static bool legsOut = true;
 static bool tankBulletFired = false;
+static bool aliensDirection = RIGHT;
 static int erosionDegree = -1;
+static int farthestRightAlienColumn = 10;
+static int farthestLeftAlienColumn = 0;
+static int bottomRowAliens[11] = {45,46,47,48,49,50,51,52,53,54};
+static point_t alienBullets[4];
+static int alienBulletsNum = 0;
+static bool currentBulletA = 1;
+
+bool getCurrentBulletA() {
+	return currentBulletA;
+}
+
+void switchCurrentBulletA() {
+	currentBulletA = !currentBulletA;
+}
+
+void addAlienBullet(point_t newBullet) {
+	if (alienBulletsNum != 3){
+		alienBullets[alienBulletsNum] = newBullet;
+		alienBulletsNum++;
+	}
+	else {
+		xil_printf("Max Alien Bullets\n\r");
+	}
+}
+
+int getAlienBulletsNum(){
+	return alienBulletsNum;
+}
+
+void removeAlienBullet(int index){
+	if (alienBulletsNum != 0){
+		alienBulletsNum--;
+		alienBullets[index]
+	}
+}
+
+point_t getAlienBullet(int index){
+	return alienBullets[index];
+}
+
+void shiftAlienBullet(int index) {
+	alienBullets[index].y += 2;
+}
+
+int getFarthestRightAlienColumn() {
+	return farthestRightAlienColumn;
+}
+
+int getFarthestLeftAlienColumn() {
+	return farthestLeftAlienColumn;
+}
+
+void switchAliensDirection() {
+	aliensDirection = !aliensDirection;
+}
+
+bool getAliensDirection() {
+	return aliensDirection;
+}
 
 // Here are the accessors.
 void setTankPositionGlobal(unsigned short val) {
@@ -54,6 +117,40 @@ bool getAliveAlien(unsigned int i){
 
 void killAlien(unsigned int i){
 	aliveAliens[i] = false;
+
+	int col;
+	int row;
+	for (col=farthestLeftAlienColumn; col<11; col++) {
+		for (row=0; row<5; row++) {
+			if (aliveAliens[(row*11) + col]) {
+				if (col == farthestLeftAlienColumn) {
+					row=5; col=11;
+				} else {
+					farthestLeftAlienColumn = col;
+					row=5; col=11;
+				}
+			}
+		}
+	}
+
+	for (col=farthestRightAlienColumn; col>0; col--) {
+		for (row=0; row<5; row++) {
+			if (aliveAliens[(row*11) + col]) {
+				if (col == farthestRightAlienColumn) {
+					row=5; col=0;
+				} else {
+					farthestRightAlienColumn = col;
+					row=5; col=0;
+				}
+			}
+		}
+	}
+
+//	for (col=0; col<11; col++) {
+//		if (!aliens[bottomRowAliens[col]]) {
+//
+//		}
+//	}
 }
 
 void switchLegsOut() {

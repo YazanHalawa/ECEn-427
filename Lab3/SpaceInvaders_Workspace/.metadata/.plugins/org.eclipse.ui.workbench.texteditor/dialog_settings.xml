@@ -13,16 +13,16 @@
 		<item value="false" key="isRegEx"/>
 		<item value="false" key="incremental"/>
 		<item value="false" key="wholeword"/>
-		<item value="erode" key="selection"/>
+		<item value="shift" key="selection"/>
 		<list key="findhistory">
+			<item value="shift"/>
+			<item value="tankB"/>
 			<item value="erode"/>
+			<item value="er"/>
+			<item value="40"/>
 			<item value="get"/>
 			<item value="getstring"/>
 			<item value="getint"/>
-			<item value="vdma"/>
-			<item value=".c"/>
-			<item value="hello"/>
-			<item value="helloworld"/>
 		</list>
 		<list key="replacehistory">
 		</list>
