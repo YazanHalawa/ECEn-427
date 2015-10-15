@@ -26,4 +26,14 @@ void render();
 
 void render_init(unsigned int * fp);
 
+void checkHits();
+
+void eraseAlienSpot();
+
+void drawSaucer(bool reset);
+
+void displaySaucerBonus(bool reset);
+
+void updateScore();
+
 #endif /* RENDER_H_ */

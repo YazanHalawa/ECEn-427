@@ -296,6 +296,85 @@ static const int I_6x5[] = {
 		packWord6(0,0,0,0,0,1)
 };
 
+static const int Zero_6x5[] = {
+		packWord6(0,0,1,1,0,0),
+		packWord6(0,1,0,0,1,0),
+		packWord6(0,1,0,0,1,0),
+		packWord6(0,1,0,0,1,0),
+		packWord6(0,0,1,1,0,0)
+};
+
+static const int One_6x5[] = {
+		packWord6(0,0,0,1,1,0),
+		packWord6(0,0,0,1,0,0),
+		packWord6(0,0,0,1,0,0),
+		packWord6(0,0,0,1,0,0),
+		packWord6(0,0,1,1,1,0)
+};
+
+static const int Two_6x5[] = {
+		packWord6(0,0,1,1,0,0),
+		packWord6(0,1,0,0,1,0),
+		packWord6(0,0,1,0,0,0),
+		packWord6(0,0,0,1,0,0),
+		packWord6(1,1,1,1,1,0)
+};
+
+static const int Three_6x5[] = {
+		packWord6(0,0,1,1,0,0),
+		packWord6(0,1,0,0,1,0),
+		packWord6(0,0,1,0,0,0),
+		packWord6(0,1,0,0,1,0),
+		packWord6(0,0,1,1,0,0)
+};
+
+static const int Four_6x5[] = {
+		packWord6(0,0,1,0,1,0),
+		packWord6(0,0,1,0,1,0),
+		packWord6(0,1,1,1,1,0),
+		packWord6(0,0,1,0,0,0),
+		packWord6(0,0,1,0,0,0)
+};
+
+static const int Five_6x5[] = {
+		packWord6(0,1,1,1,1,0),
+		packWord6(0,0,0,0,1,0),
+		packWord6(0,0,1,1,1,0),
+		packWord6(0,1,0,0,0,0),
+		packWord6(0,0,1,1,1,0)
+};
+
+static const int Six_6x5[] = {
+		packWord6(0,1,1,1,1,0),
+		packWord6(0,0,0,0,1,0),
+		packWord6(0,1,1,1,1,0),
+		packWord6(0,1,0,0,1,0),
+		packWord6(0,1,1,1,1,0)
+};
+
+static const int Seven_6x5[] = {
+		packWord6(0,1,1,1,1,0),
+		packWord6(0,1,0,0,0,0),
+		packWord6(0,0,1,0,0,0),
+		packWord6(0,0,0,1,0,0),
+		packWord6(0,0,0,0,1,0)
+};
+static const int Eight_6x5[] = {
+		packWord6(0,1,1,1,1,0),
+		packWord6(0,1,0,0,1,0),
+		packWord6(0,1,1,1,1,0),
+		packWord6(0,1,0,0,1,0),
+		packWord6(0,1,1,1,1,0)
+};
+static const int Nine_6x5[] = {
+		packWord6(0,1,1,1,1,0),
+		packWord6(0,1,0,0,1,0),
+		packWord6(0,1,1,1,1,0),
+		packWord6(0,1,0,0,0,0),
+		packWord6(0,1,0,0,0,0)
+};
+
+static const int* NumArray[] = {Zero_6x5, One_6x5, Two_6x5, Three_6x5, Four_6x5, Five_6x5, Six_6x5, Seven_6x5, Eight_6x5, Nine_6x5};
 
 static const int V_6x5[] = {
 		packWord6(1,0,0,0,0,1),

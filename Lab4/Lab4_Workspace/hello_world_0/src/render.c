@@ -7,6 +7,7 @@
 #include "render.h"
 #include "globals.h"
 #include "bitmaps.h"
+#include "interrupts.h"
 
 #define INITIAL_TANK_POSITION 20;
 
@@ -22,7 +23,8 @@ static const int bulletWidth = BULLET_PIXEL_WIDTH;
 static const int bulletHeight = BULLET_PIXEL_HEIGHT;
 static bool aliensStillMovingHorizontally = true;
 static unsigned int * framePointer0;
-
+static const int saucerWidth = SAUCER_PIXEL_WIDTH;
+static const int saucerHeight = SAUCER_PIXEL_HEIGHT;
 
 // Draws the tank on the screen.
 void drawTank(bool staticTank, int startRow, int startCol) {
@@ -134,13 +136,30 @@ void drawBunkers() {
 
 }
 
+void drawSaucer(bool reset) {
+	int row = 0;
+	int col = 0;
+	int start_x = getSaucerPos().x;
+	int start_y = getSaucerPos().y;
+	for (row = start_y; row < start_y+saucerHeight; row++) {
+		for (col = start_x; col < start_x+saucerWidth; col++) {
+			if (reset || (saucer_16x7[(row - start_y)/scalingFactor] & (1<<((col-start_x)/scalingFactor))) == 0 || (col <= 0) || col >= 640) {
+				framePointer0[row*pixelWidth + col] = BLACK;
+			} else {
+				framePointer0[row*pixelWidth + col] = RED;
+			}
+		}
+	}
+}
+
+
 // Draw a top row alien
-void drawTopAlien(unsigned int start_x, unsigned int start_y) {
+void drawTopAlien(unsigned int start_x, unsigned int start_y, bool reset) {
 	int row = 0;
 	int col = 0;
 	for (row = start_y; row < start_y+alienHeight; row++) {
 		for (col = start_x; col < start_x+alienWidth; col++) {
-			if ((alien_top_out_12x8[(row - start_y)/scalingFactor] & (1<<((col-start_x)/scalingFactor))) == 0){
+			if ((alien_top_out_12x8[(row - start_y)/scalingFactor] & (1<<((col-start_x)/scalingFactor))) == 0 || reset){
 				framePointer0[row*pixelWidth + col] = BLACK;
 			} else {
 				framePointer0[row*pixelWidth + col] = WHITE;
@@ -150,12 +169,12 @@ void drawTopAlien(unsigned int start_x, unsigned int start_y) {
 }
 
 // Draw a middle row alien
-void drawMiddleAlien(unsigned int start_x, unsigned int start_y) {
+void drawMiddleAlien(unsigned int start_x, unsigned int start_y, bool reset) {
 	int row = 0;
 	int col = 0;
 	for (row = start_y; row < start_y+alienHeight; row++) {
 		for (col = start_x; col < start_x+alienWidth; col++) {
-			if ((alien_middle_out_12x8[(row - start_y)/scalingFactor] & (1<<((col-start_x)/scalingFactor))) == 0){
+			if ((alien_middle_out_12x8[(row - start_y)/scalingFactor] & (1<<((col-start_x)/scalingFactor))) == 0 || reset){
 				framePointer0[row*pixelWidth + col] = BLACK;
 			} else {
 				framePointer0[row*pixelWidth + col] = WHITE;
@@ -165,12 +184,12 @@ void drawMiddleAlien(unsigned int start_x, unsigned int start_y) {
 }
 
 // Draw a bottom row alien
-void drawBottomAlien(unsigned int start_x, unsigned int start_y) {
+void drawBottomAlien(unsigned int start_x, unsigned int start_y, bool reset) {
 	int row = 0;
 	int col = 0;
 	for (row = start_y; row < start_y+alienHeight; row++) {
 		for (col = start_x; col < start_x+alienWidth; col++) {
-			if ((alien_bottom_out_12x8[(row - start_y)/scalingFactor] & (1<<((col-start_x)/scalingFactor))) == 0){
+			if ((alien_bottom_out_12x8[(row - start_y)/scalingFactor] & (1<<((col-start_x)/scalingFactor))) == 0 || reset){
 				framePointer0[row*pixelWidth + col] = BLACK;
 			} else {
 				framePointer0[row*pixelWidth + col] = WHITE;
@@ -180,7 +199,7 @@ void drawBottomAlien(unsigned int start_x, unsigned int start_y) {
 }
 
 // Draw all the top row aliens
-void drawTopAliens(){
+void drawTopAliens(bool reset){
 	int alienNumber = 0;
 	for (alienNumber=0; alienNumber<11; alienNumber++) {
 		if (!getAliveAlien(alienNumber)) {
@@ -188,12 +207,12 @@ void drawTopAliens(){
 		}
 		int alien_start_x = getAlienBlockPosition().x + (alienNumber*totalAlienWidth);
 		int alien_start_y = getAlienBlockPosition().y;
-		drawTopAlien(alien_start_x, alien_start_y);
+		drawTopAlien(alien_start_x, alien_start_y, reset);
 	}
 }
 
 // Draw all the middle row aliens
-void drawMiddleAliens() {
+void drawMiddleAliens(bool reset) {
 	int alienNumber = 0;
 	for (alienNumber=11; alienNumber<22; alienNumber++) {
 		if (!getAliveAlien(alienNumber)) {
@@ -201,7 +220,7 @@ void drawMiddleAliens() {
 		}
 		int alien_start_x = getAlienBlockPosition().x + ((alienNumber-11)*totalAlienWidth);
 		int alien_start_y = getAlienBlockPosition().y + totalAlienHeight;
-		drawMiddleAlien(alien_start_x, alien_start_y);
+		drawMiddleAlien(alien_start_x, alien_start_y, reset);
 	}
 
 	for (alienNumber=22; alienNumber<33; alienNumber++) {
@@ -210,12 +229,12 @@ void drawMiddleAliens() {
 		}
 		int alien_start_x = getAlienBlockPosition().x + ((alienNumber-22)*totalAlienWidth);
 		int alien_start_y = getAlienBlockPosition().y + 48;
-		drawMiddleAlien(alien_start_x, alien_start_y);
+		drawMiddleAlien(alien_start_x, alien_start_y, reset);
 	}
 }
 
 // Draw all the bottom row aliens
-void drawBottomAliens() {
+void drawBottomAliens(bool reset) {
 	int alienNumber = 0;
 	for (alienNumber=33; alienNumber<44; alienNumber++) {
 		if (!getAliveAlien(alienNumber)) {
@@ -223,7 +242,7 @@ void drawBottomAliens() {
 		}
 		int alien_start_x = getAlienBlockPosition().x + ((alienNumber-33)*totalAlienWidth);
 		int alien_start_y = getAlienBlockPosition().y + 72;
-		drawBottomAlien(alien_start_x, alien_start_y);
+		drawBottomAlien(alien_start_x, alien_start_y, reset);
 	}
 	for (alienNumber=44; alienNumber<55; alienNumber++) {
 		if (!getAliveAlien(alienNumber)) {
@@ -231,18 +250,18 @@ void drawBottomAliens() {
 		}
 		int alien_start_x = getAlienBlockPosition().x + ((alienNumber-44)*totalAlienWidth);
 		int alien_start_y = getAlienBlockPosition().y + 96;
-		drawBottomAlien(alien_start_x, alien_start_y);
+		drawBottomAlien(alien_start_x, alien_start_y, reset);
 	}
 }
 
 
 // Draw a top row alien with legs in
-void drawTopAlien_in(unsigned int start_x, unsigned int start_y) {
+void drawTopAlien_in(unsigned int start_x, unsigned int start_y, bool reset) {
 	int row = 0;
 	int col = 0;
 	for (row = start_y; row < start_y+alienHeight; row++) {
 		for (col = start_x; col < start_x+alienWidth; col++) {
-			if ((alien_top_in_12x8[(row - start_y)/scalingFactor] & (1<<((col-start_x)/scalingFactor))) == 0){
+			if ((alien_top_in_12x8[(row - start_y)/scalingFactor] & (1<<((col-start_x)/scalingFactor))) == 0 || reset){
 				framePointer0[row*pixelWidth + col] = BLACK;
 			} else {
 				framePointer0[row*pixelWidth + col] = WHITE;
@@ -252,12 +271,12 @@ void drawTopAlien_in(unsigned int start_x, unsigned int start_y) {
 }
 
 // Draw a middle row alien with legs in
-void drawMiddleAlien_in(unsigned int start_x, unsigned int start_y) {
+void drawMiddleAlien_in(unsigned int start_x, unsigned int start_y, bool reset) {
 	int row = 0;
 	int col = 0;
 	for (row = start_y; row < start_y+alienHeight; row++) {
 		for (col = start_x; col < start_x+alienWidth; col++) {
-			if ((alien_middle_in_12x8[(row - start_y)/scalingFactor] & (1<<((col-start_x)/scalingFactor))) == 0){
+			if ((alien_middle_in_12x8[(row - start_y)/scalingFactor] & (1<<((col-start_x)/scalingFactor))) == 0 || reset){
 				framePointer0[row*pixelWidth + col] = BLACK;
 			} else {
 				framePointer0[row*pixelWidth + col] = WHITE;
@@ -267,12 +286,12 @@ void drawMiddleAlien_in(unsigned int start_x, unsigned int start_y) {
 }
 
 // Draw a bottom row alien with legs in
-void drawBottomAlien_in(unsigned int start_x, unsigned int start_y) {
+void drawBottomAlien_in(unsigned int start_x, unsigned int start_y, bool reset) {
 	int row = 0;
 	int col = 0;
 	for (row = start_y; row < start_y+alienHeight; row++) {
 		for (col = start_x; col < start_x+alienWidth; col++) {
-			if ((alien_bottom_in_12x8[(row - start_y)/scalingFactor] & (1<<((col-start_x)/scalingFactor))) == 0){
+			if ((alien_bottom_in_12x8[(row - start_y)/scalingFactor] & (1<<((col-start_x)/scalingFactor))) == 0 || reset){
 				framePointer0[row*pixelWidth + col] = BLACK;
 			} else {
 				framePointer0[row*pixelWidth + col] = WHITE;
@@ -282,7 +301,7 @@ void drawBottomAlien_in(unsigned int start_x, unsigned int start_y) {
 }
 
 // Draw all top row aliens with legs in
-void drawTopAliens_in(){
+void drawTopAliens_in(bool reset){
 	int alienNumber = 0;
 	for (alienNumber=0; alienNumber<11; alienNumber++) {
 		if (!getAliveAlien(alienNumber)) {
@@ -290,12 +309,12 @@ void drawTopAliens_in(){
 		}
 		int alien_start_x = getAlienBlockPosition().x + (alienNumber*totalAlienWidth);
 		int alien_start_y = getAlienBlockPosition().y;
-		drawTopAlien_in(alien_start_x, alien_start_y);
+		drawTopAlien_in(alien_start_x, alien_start_y, reset);
 	}
 }
 
 // Draw all middle row aliens with legs in
-void drawMiddleAliens_in() {
+void drawMiddleAliens_in(bool reset) {
 	int alienNumber = 0;
 	for (alienNumber=11; alienNumber<22; alienNumber++) {
 		if (!getAliveAlien(alienNumber)) {
@@ -303,7 +322,7 @@ void drawMiddleAliens_in() {
 		}
 		int alien_start_x = getAlienBlockPosition().x + ((alienNumber-11)*totalAlienWidth);
 		int alien_start_y = getAlienBlockPosition().y + totalAlienHeight;
-		drawMiddleAlien_in(alien_start_x, alien_start_y);
+		drawMiddleAlien_in(alien_start_x, alien_start_y, reset);
 	}
 
 	for (alienNumber=22; alienNumber<33; alienNumber++) {
@@ -312,12 +331,12 @@ void drawMiddleAliens_in() {
 		}
 		int alien_start_x = getAlienBlockPosition().x + ((alienNumber-22)*totalAlienWidth);
 		int alien_start_y = getAlienBlockPosition().y + 48;
-		drawMiddleAlien_in(alien_start_x, alien_start_y);
+		drawMiddleAlien_in(alien_start_x, alien_start_y, reset);
 	}
 }
 
 // Draw all bottom row aliens with legs in
-void drawBottomAliens_in() {
+void drawBottomAliens_in(bool reset) {
 	int alienNumber = 0;
 	for (alienNumber=33; alienNumber<44; alienNumber++) {
 		if (!getAliveAlien(alienNumber)) {
@@ -325,7 +344,7 @@ void drawBottomAliens_in() {
 		}
 		int alien_start_x = getAlienBlockPosition().x + ((alienNumber-33)*totalAlienWidth);
 		int alien_start_y = getAlienBlockPosition().y + 72;
-		drawBottomAlien_in(alien_start_x, alien_start_y);
+		drawBottomAlien_in(alien_start_x, alien_start_y, reset);
 	}
 	for (alienNumber=44; alienNumber<55; alienNumber++) {
 		if (!getAliveAlien(alienNumber)) {
@@ -333,11 +352,11 @@ void drawBottomAliens_in() {
 		}
 		int alien_start_x = getAlienBlockPosition().x + ((alienNumber-44)*totalAlienWidth);
 		int alien_start_y = getAlienBlockPosition().y + 96;
-		drawBottomAlien_in(alien_start_x, alien_start_y);
+		drawBottomAlien_in(alien_start_x, alien_start_y, reset);
 	}
 }
 
-// Clear all aliens from the screen.
+//  all aliens from the screen.
 void resetAliens() {
 	int alien_start_x = 0;
 	int alien_start_y = 0;
@@ -348,9 +367,34 @@ void resetAliens() {
 	}
 }
 
+void eraseAlienSpot() {
+	int row;
+	int col;
+	int startRow = getOldAlienPos().y;
+	int startCol = getOldAlienPos().x;
+
+	for (row = startRow; row < startRow+totalAlienHeight; row++) {
+		for (col = startCol; col < startCol+alienWidth+2; col++) {
+			framePointer0[row*pixelWidth + col] = BLACK;
+		}
+	}
+}
+
 // Draw all living aliens on the screen.
 void drawAliens() {
-	resetAliens(framePointer0);
+	//resetAliens(framePointer0);
+	// First we need to erase the old aliens
+
+	if (getLegsOut()) {
+		drawTopAliens(true);
+		drawMiddleAliens(true);
+		drawBottomAliens(true);
+	} else {
+		drawTopAliens_in(true);
+		drawMiddleAliens_in(true);
+		drawBottomAliens_in(true);
+	}
+
 	int farthestLeftAlienPosition = getAlienBlockPosition().x + ((getFarthestLeftAlienColumn()) * totalAlienWidth);
 	int farthestRightAlienPosition = getAlienBlockPosition().x + ((getFarthestRightAlienColumn() + 1) * totalAlienWidth);
 	if ((farthestLeftAlienPosition < 20 || farthestRightAlienPosition > 620) && aliensStillMovingHorizontally) {
@@ -366,13 +410,13 @@ void drawAliens() {
 		aliensStillMovingHorizontally = true;
 	}
 	if (getLegsOut()) {
-		drawTopAliens(framePointer0);
-		drawMiddleAliens(framePointer0);
-		drawBottomAliens(framePointer0);
+		drawTopAliens(false);
+		drawMiddleAliens(false);
+		drawBottomAliens(false);
 	} else {
-		drawTopAliens_in(framePointer0);
-		drawMiddleAliens_in(framePointer0);
-		drawBottomAliens_in(framePointer0);
+		drawTopAliens_in(false);
+		drawMiddleAliens_in(false);
+		drawBottomAliens_in(false);
 	}
 	switchLegsOut();
 }
@@ -391,7 +435,7 @@ void drawTBullet0(bullet b, bool reset) {
 				if (reset) {
 					framePointer0[row*pixelWidth + col] = BLACK;
 				} else {
-					framePointer0[row*pixelWidth + col] = WHITE;
+					framePointer0[row*pixelWidth + col] = BULLET_WHITE;
 				}
 			}
 		}
@@ -412,7 +456,7 @@ void drawTBullet1(bullet b, bool reset) {
 				if (reset) {
 					framePointer0[row*pixelWidth + col] = BLACK;
 				} else {
-					framePointer0[row*pixelWidth + col] = WHITE;
+					framePointer0[row*pixelWidth + col] = BULLET_WHITE;
 				}
 			}
 		}
@@ -433,7 +477,7 @@ void drawTBullet2(bullet b, bool reset) {
 				if (reset) {
 					framePointer0[row*pixelWidth + col] = BLACK;
 				} else {
-					framePointer0[row*pixelWidth + col] = WHITE;
+					framePointer0[row*pixelWidth + col] = BULLET_WHITE;
 				}
 			}
 		}
@@ -454,7 +498,7 @@ void drawSBullet0(bullet b, bool reset) {
 				if (reset) {
 					framePointer0[row*pixelWidth + col] = BLACK;
 				} else {
-					framePointer0[row*pixelWidth + col] = WHITE;
+					framePointer0[row*pixelWidth + col] = BULLET_WHITE;
 				}
 			}
 		}
@@ -475,7 +519,7 @@ void drawSBullet1(bullet b, bool reset) {
 				if (reset) {
 					framePointer0[row*pixelWidth + col] = BLACK;
 				} else {
-					framePointer0[row*pixelWidth + col] = WHITE;
+					framePointer0[row*pixelWidth + col] = BULLET_WHITE;
 				}
 			}
 		}
@@ -496,7 +540,7 @@ void drawSBullet2(bullet b, bool reset) {
 				if (reset) {
 					framePointer0[row*pixelWidth + col] = BLACK;
 				} else {
-					framePointer0[row*pixelWidth + col] = WHITE;
+					framePointer0[row*pixelWidth + col] = BULLET_WHITE;
 				}
 			}
 		}
@@ -517,7 +561,7 @@ void drawSBullet3(bullet b, bool reset) {
 				if (reset) {
 					framePointer0[row*pixelWidth + col] = BLACK;
 				} else {
-					framePointer0[row*pixelWidth + col] = WHITE;
+					framePointer0[row*pixelWidth + col] = BULLET_WHITE;
 				}
 			}
 		}
@@ -532,31 +576,31 @@ void drawBullets() {
 			if (getAlienBullet(i).type == T_type) {
 				switch(getAlienBullet(i).bullet_stage) {
 				case (0):
-					drawTBullet0(getAlienBullet(i), false);
-					break;
+									drawTBullet0(getAlienBullet(i), false);
+				break;
 				case (1):
-					drawTBullet1(getAlienBullet(i), false);
-					break;
+									drawTBullet1(getAlienBullet(i), false);
+				break;
 				case (2):
-					drawTBullet2(getAlienBullet(i), false);
-					break;
+									drawTBullet2(getAlienBullet(i), false);
+				break;
 				default:
 					break;
 				}
 			} else {
 				switch(getAlienBullet(i).bullet_stage) {
 				case (0):
-					drawSBullet0(getAlienBullet(i), false);
-					break;
+									drawSBullet0(getAlienBullet(i), false);
+				break;
 				case (1):
-					drawSBullet1(getAlienBullet(i), false);
-					break;
+									drawSBullet1(getAlienBullet(i), false);
+				break;
 				case (2):
-					drawSBullet2(getAlienBullet(i), false);
-					break;
+									drawSBullet2(getAlienBullet(i), false);
+				break;
 				case (3):
-					drawSBullet3(getAlienBullet(i), false);
-					break;
+									drawSBullet3(getAlienBullet(i), false);
+				break;
 				default:
 					break;
 				}
@@ -586,31 +630,31 @@ void updateBullets() {
 				if (getAlienBullet(i).type == T_type) {
 					switch(getAlienBullet(i).bullet_stage) {
 					case (0):
-						drawTBullet0(getAlienBullet(i), false);
-						break;
+										drawTBullet0(getAlienBullet(i), false);
+					break;
 					case (1):
-						drawTBullet1(getAlienBullet(i), false);
-						break;
+										drawTBullet1(getAlienBullet(i), false);
+					break;
 					case (2):
-						drawTBullet2(getAlienBullet(i), false);
-						break;
+										drawTBullet2(getAlienBullet(i), false);
+					break;
 					default:
 						break;
 					}
 				} else {
 					switch(getAlienBullet(i).bullet_stage) {
 					case (0):
-						drawSBullet0(getAlienBullet(i), false);
-						break;
+										drawSBullet0(getAlienBullet(i), false);
+					break;
 					case (1):
-						drawSBullet1(getAlienBullet(i), false);
-						break;
+										drawSBullet1(getAlienBullet(i), false);
+					break;
 					case (2):
-						drawSBullet2(getAlienBullet(i), false);
-						break;
+										drawSBullet2(getAlienBullet(i), false);
+					break;
 					case (3):
-						drawSBullet3(getAlienBullet(i), false);
-						break;
+										drawSBullet3(getAlienBullet(i), false);
+					break;
 					default:
 						break;
 					}
@@ -622,48 +666,174 @@ void updateBullets() {
 	}
 
 }
-
-// Draw the tank bullet on the screen.
-void drawTankBullet(bool reset){
+void clearBullet() {
 	int row;
-	for (row = getTankBulletPosition().y-6; row < getTankBulletPosition().y; row++) {
-		if (reset) {
-			framePointer0[(row+3)*pixelWidth + getTankBulletPosition().x] = BLACK;
-			framePointer0[(row+3)*pixelWidth + getTankBulletPosition().x-1] = BLACK;
-			framePointer0[(row)*pixelWidth + getTankBulletPosition().x] = WHITE;
-			framePointer0[(row)*pixelWidth + getTankBulletPosition().x-1] = WHITE;
-		} else {
-			framePointer0[row*pixelWidth + getTankBulletPosition().x] = WHITE;
-			framePointer0[row*pixelWidth + getTankBulletPosition().x-1] = WHITE;
-
-		}
+	int rowPixel = getTankBulletPosition().y;
+	for (row = rowPixel-10; row < rowPixel; row++){
+		framePointer0[(row)*pixelWidth + getTankBulletPosition().x] = BLACK;
+		framePointer0[(row)*pixelWidth + getTankBulletPosition().x-1] = BLACK;
 	}
-	if (getTankBulletPosition().y < 30 || getTankBulletPosition().y > 480){
-		// Blank the bullet
-		for (row = getTankBulletPosition().y-6 ; row < getTankBulletPosition().y; row++){
-			framePointer0[(row)*pixelWidth + getTankBulletPosition().x] = BLACK;
-			framePointer0[(row)*pixelWidth + getTankBulletPosition().x-1] = BLACK;
+}
+
+void destroyAlien(int rowNum, int colNum) {
+
+	int row;
+	int col;
+	int startRow = getAlienBlockPosition().y + (rowNum*totalAlienHeight);
+	int startCol = getAlienBlockPosition().x + (colNum*totalAlienWidth);
+	point_t deadPos;
+	deadPos.x = startCol;
+	deadPos.y = startRow;
+	setOldAlienPos(deadPos);
+	eraseAlienSpot();
+	for (row = startRow; row < startRow+totalAlienHeight; row++) {
+		for (col = startCol; col < startCol+totalAlienWidth; col++) {
+			if ((alien_explosion_12x10[(row - startRow)/scalingFactor] & (1<<((col-startCol)/scalingFactor))) == 0){
+				framePointer0[row*pixelWidth + col] = BLACK;
+			} else {
+				framePointer0[row*pixelWidth + col] = WHITE;
+			}
 		}
-		setBulletStatus(false);
 	}
 }
 
 // Draw a letter. This is used to display the Score and Lives
-void drawLetter(bool isNumber, int start_row, int start_col, const int array[]){
+void drawLetter(bool reset, int Color, int start_row, int start_col, const int array[]){
 	int row;
 	int col;
 	for (row = start_row; row < start_row + 10; row++){
 		for (col = start_col; col < start_col + 12; col++){
-			if ((array[(row - start_row)/scalingFactor] & (1<<((col-start_col)/scalingFactor))) == 0){
+			if (reset || (array[(row - start_row)/scalingFactor] & (1<<((col-start_col)/scalingFactor))) == 0){
 				framePointer0[row*pixelWidth + col] = BLACK;
 			} else {
-				if (isNumber){
-					framePointer0[row*pixelWidth + col] = GREEN;
-				} else {
-					framePointer0[row*pixelWidth + col] = WHITE;
-				}
+				framePointer0[row*pixelWidth + col] = Color;
 			}
 		}
+	}
+}
+
+void displaySaucerBonus(bool reset){
+	int startRow = getSaucerPos().y;
+	int startCol = getSaucerPos().x;
+	if (startCol < 60)
+		startCol = 60;
+	if (startCol > 580)
+		startCol = 580;
+	int NumColor = WHITE;
+	int i ;
+	int scoreIncrease = getSaucerBonus();
+	if (scoreIncrease < 10)
+		i = 1;
+	else if (scoreIncrease < 100)
+		i = 2;
+	else if (scoreIncrease < 1000)
+		i = 3;
+	else
+		i = 4;
+	int iter = 0;
+	for (iter = 0; iter < i; iter++){
+		int temp = 0;
+		temp = scoreIncrease % 10;
+		scoreIncrease /= 10;
+		drawLetter(reset, NumColor, startRow, startCol, NumArray[temp]);
+		startCol -= 15;
+	}
+}
+
+void checkHits() {
+	int columnCount = ALIEN_COLUMNS;
+	short bullet_x = getTankBulletPosition().x;
+	short bullet_y = getTankBulletPosition().y-12;
+	unsigned int alienColor = WHITE;
+	unsigned int saucerColor = RED;
+	unsigned int bunkerColor = GREEN;
+	unsigned int temp = framePointer0[(bullet_y * pixelWidth) + bullet_x];
+	//xil_printf("color: 0x%x   temp: 0x%x\n\r", color, temp);
+	// The bullet found that the next pixel is WHITE, ie the bullet hit an alien.
+	if (temp == alienColor) {
+		// the bullet
+		clearBullet();
+		setBulletStatus(false);
+		// Now we must find which alien was hit...
+		int alienBlock_x = (int)getAlienBlockPosition().x;
+		int alienBlock_y = (int)getAlienBlockPosition().y;
+		int hit_alienCol = (bullet_x - alienBlock_x)/totalAlienWidth;
+		int hit_alienRow = (bullet_y - alienBlock_y)/totalAlienHeight;
+		setDeadAlien((hit_alienRow * columnCount) + hit_alienCol);
+		killAlien((unsigned int)getDeadAlien());
+		destroyAlien(hit_alienRow, hit_alienCol);
+		resetAlienExplosionCount();
+	}
+	if (temp == saucerColor) {
+		clearBullet();
+		setBulletStatus(false);
+		drawSaucer(true);
+		// Calculate score
+		int randomMultiplier = rand() % 6;
+		if (randomMultiplier == 0)
+			randomMultiplier = 1;
+		int scoreIncrease = randomMultiplier * 50;
+		setScore(getScore() + scoreIncrease);
+		updateScore();
+		setSaucerBonus(scoreIncrease);
+		setSaucerDirection(0);
+	}
+	if (temp == bunkerColor) {
+
+	}
+}
+
+
+
+// Draw the tank bullet on the screen.
+void drawTankBullet(bool reset){
+	int row;
+	for (row = getTankBulletPosition().y-10; row < getTankBulletPosition().y; row++) {
+		if (reset) {
+			framePointer0[(row+3)*pixelWidth + getTankBulletPosition().x] = BLACK;
+			framePointer0[(row+3)*pixelWidth + getTankBulletPosition().x-1] = BLACK;
+			framePointer0[(row)*pixelWidth + getTankBulletPosition().x] = BULLET_WHITE;
+			framePointer0[(row)*pixelWidth + getTankBulletPosition().x-1] = BULLET_WHITE;
+		} else {
+			framePointer0[row*pixelWidth + getTankBulletPosition().x] = BULLET_WHITE;
+			framePointer0[row*pixelWidth + getTankBulletPosition().x-1] = BULLET_WHITE;
+
+		}
+	}
+	if (getBulletStatus()){
+		if (getTankBulletPosition().y < 40 || getTankBulletPosition().y > 480){
+			// Blank the bullet
+			for (row = getTankBulletPosition().y-10 ; row < getTankBulletPosition().y; row++){
+				framePointer0[(row)*pixelWidth + getTankBulletPosition().x] = BLACK;
+				framePointer0[(row)*pixelWidth + getTankBulletPosition().x-1] = BLACK;
+			}
+			setBulletStatus(false);
+		}
+	}
+}
+
+
+void updateScore() {
+	int startRow = 10;
+	int startCol = 110 + 60;
+	int NumColor = GREEN;
+	unsigned int score = getScore();
+	int i ;
+	if (score < 10)
+		i = 1;
+	else if (score < 100)
+		i = 2;
+	else if (score < 1000)
+		i = 3;
+	else
+		i = 4;
+	int iter = 0;
+	for (iter = 0; iter < i; iter++){
+		int temp = 0;
+		temp = score % 10;
+		score /= 10;
+		drawLetter(false, NumColor, startRow, startCol, NumArray[temp]);
+		startCol -= 15;
 	}
 }
 
@@ -671,31 +841,31 @@ void drawLetter(bool isNumber, int start_row, int start_col, const int array[]){
 void drawStats(){
 	int startRow = 10;
 	int startCol = 20;
-
+	int letterColor = WHITE;
 	// Draw the Score
-	drawLetter(false, startRow, startCol, S_6x5); // Draw S
+	drawLetter(false, letterColor, startRow, startCol, S_6x5); // Draw S
 	startCol += 15;
-	drawLetter(false, startRow, startCol, C_6x5); // Draw C
+	drawLetter(false, letterColor, startRow, startCol, C_6x5); // Draw C
 	startCol += 15;
-	drawLetter(false, startRow, startCol, O_6x5); // Draw O
+	drawLetter(false, letterColor, startRow, startCol, O_6x5); // Draw O
 	startCol += 15;
-	drawLetter(false, startRow, startCol, R_6x5); // Draw R
+	drawLetter(false, letterColor, startRow, startCol, R_6x5); // Draw R
 	startCol += 15;
-	drawLetter(false, startRow, startCol, E_6x5); // Draw E
+	drawLetter(false, letterColor, startRow, startCol, E_6x5); // Draw E
 	startCol += 30;
-	drawLetter(true, startRow, startCol, O_6x5); // Draw Zero
+	updateScore();
 	startCol += 300;
 
 	// Draw the Lives
-	drawLetter(false, startRow, startCol, L_6x5); // Draw L
+	drawLetter(false, letterColor, startRow, startCol, L_6x5); // Draw L
 	startCol += 15;
-	drawLetter(false, startRow, startCol, I_6x5); // Draw I
+	drawLetter(false, letterColor, startRow, startCol, I_6x5); // Draw I
 	startCol += 5;
-	drawLetter(false, startRow, startCol, V_6x5); // Draw V
+	drawLetter(false, letterColor, startRow, startCol, V_6x5); // Draw V
 	startCol += 15;
-	drawLetter(false, startRow, startCol, E_6x5); // Draw E
+	drawLetter(false, letterColor, startRow, startCol, E_6x5); // Draw E
 	startCol += 15;
-	drawLetter(false, startRow, startCol, S_6x5); // Draw S
+	drawLetter(false, letterColor, startRow, startCol, S_6x5); // Draw S
 	startCol += 30;
 	startRow -= 5;
 	drawTank(true, startRow, startCol);

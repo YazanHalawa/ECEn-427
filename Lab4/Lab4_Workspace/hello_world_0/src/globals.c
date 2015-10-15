@@ -25,11 +25,66 @@ static int farthestLeftAlienColumn = 0;
 static int bottomRowAliens[11] = {44,45,46,47,48,49,50,51,52,53,54};
 static int alienTicks = FIT_TICKS_BETWEEN_ALIEN_BLOCK_MOVEMENT_INIT;
 static bullet alienBullets[4];
+static int deadAlien = -1;
+static point_t oldDeadAlienPos;
+static int saucerDirection = 0;
+static point_t saucerPos = {0,40};
+static unsigned int score = 0;
+static unsigned saucerBonus = 0;
+
+int getSaucerBonus(){
+	return saucerBonus;
+}
+
+void setSaucerBonus(int newVal){
+	saucerBonus = newVal;
+}
+
+int getScore(){
+	return score;
+}
+
+void setScore(unsigned int newVal){
+	score = newVal;
+}
+
+int getSaucerDirection(){
+	return saucerDirection;
+}
+
+void setSaucerDirection(int newVal){
+	saucerDirection = newVal;
+}
+
+point_t getSaucerPos(){
+	return saucerPos;
+}
+
+void setSaucerPos(point_t newVal){
+	saucerPos = newVal;
+}
+
+point_t getOldAlienPos(){
+	return oldDeadAlienPos;
+}
+
+void setOldAlienPos(point_t newVal){
+	oldDeadAlienPos = newVal;
+}
+
+int getDeadAlien() {
+	return deadAlien;
+}
+
+void setDeadAlien(int newVal) {
+	deadAlien = newVal;
+}
 
 
 int getAlienTicks() {
 	return alienTicks;
 }
+
 
 void addAlienBullet() {
 	// Some ints to help with computation.
@@ -238,7 +293,6 @@ void killAlien(unsigned int i){
 			}
 		}
 	}
-
 	col = i%ALIEN_COLUMNS;
 	bool columnDead = true;
 
@@ -255,6 +309,14 @@ void killAlien(unsigned int i){
 			break;
 		}
 	}
+
+	row = i/ALIEN_COLUMNS;
+	if (row == 0)
+		score += 40;
+	else if (row <= 2)
+		score += 20;
+	else
+		score += 10;
 
 	// If the column is dead, then the array needs to be given a -1.
 	// -1 is defined as COLUMN_DEAD.

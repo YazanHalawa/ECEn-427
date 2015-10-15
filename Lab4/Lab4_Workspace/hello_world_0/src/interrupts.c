@@ -18,14 +18,9 @@
 #define SECONDS_IN_MINUTE 60		// There are 60 seconds in a minute.
 #define TICKS_PER_SECOND 100		// There are 100 FIT ticks per seconds.
 #define BUTTON_DEBOUNCE_WAIT 4		// Wait 4 FIT ticks (40ms) for a button debounce.
-
-
-// These correspond to the numerical values of the buttons:
-#define MINUTES_BUTTON 1
-#define SECONDS_BUTTON 2
-#define DOWN_BUTTON 4
-#define HOURS_BUTTON 8
-#define UP_BUTTON 16
+#define TANK_BORDER_RIGHT 600
+#define TANK_BORDER_LEFT 10
+#define SAUCER_FLASH_TICKS 30
 
 #define MOVE_TANK_LEFT 8;
 #define MOVE_TANK_RIGHT 2;
@@ -38,47 +33,20 @@ XGpio gpPB;   // This is a handle for the push-button GPIO block.
 // The counters are all initialized to 0.
 static u32 fit_timer_count = 0;
 static u32 debounce_timer_count = 0;
-static u32 auto_inc_timer_count = 0;
+static u32 alien_explosion_count = 0;
 static u32 alien_fire_count = 0;
+static u32 saucer_count = 0;
 static u32 currentButtonState = 0;
-static s32 cumulative_seconds = 0;
 static u32 alienBulletTicks = 500;
+static u32 saucerTicks = 400; // wait 20 seconds before saucer comes
+static bool currentFlashState = true;
+static int flashNum = 0;
+static int saucerFlashTime = 0;
 
 
-// This updates the display of the clock on the screen.
-void updateTiming(){
-	// First it checks for rollover and rollunder.
-	if (cumulative_seconds >= MAX_TIME)		// cumulative_seconds exceeds 23:59:59.
-		cumulative_seconds -= MAX_TIME;		// Decrease cumulative_seconds by 1 full day.
-	else if (cumulative_seconds < 0)		// cumulative_seconds is below 00:00:00.
-		cumulative_seconds += MAX_TIME;		// Increase cumulative_seconds by 1 full day.
-	u32 hours = cumulative_seconds/SECONDS_IN_HOUR;							// Compute how many hours are in cumulative_seconds.
-	u32 minutes = (cumulative_seconds%SECONDS_IN_HOUR)/SECONDS_IN_MINUTE;	// Compute how many minutes are remaining.
-	u32 seconds = (cumulative_seconds%SECONDS_IN_HOUR)%SECONDS_IN_MINUTE;	// Compute how many seconds are remaining.
-	xil_printf("\r%02d:%02d:%02d", hours, minutes, seconds);				// Carriage Return to overwrite old clock value.
+void resetAlienExplosionCount() {
+	alien_explosion_count = 0;
 }
-
-// This changes the time on the clock based on the button values pressed
-void setClock() {
-	// Update the value of cumulative_seconds based on the buttons pressed.
-	// For example, pressing DOWN_BUTTON and SECONDS_BUTTON decrements cumulative_seconds by one.
-	// Note that invalid button combinations are ignored.
-	if (currentButtonState == DOWN_BUTTON + SECONDS_BUTTON)
-		cumulative_seconds--;
-	else if (currentButtonState == DOWN_BUTTON + MINUTES_BUTTON)
-		cumulative_seconds -= SECONDS_IN_MINUTE;
-	else if (currentButtonState == DOWN_BUTTON + HOURS_BUTTON)
-		cumulative_seconds -= SECONDS_IN_HOUR;
-	else if (currentButtonState == UP_BUTTON + SECONDS_BUTTON)
-		cumulative_seconds++;
-	else if (currentButtonState == UP_BUTTON + MINUTES_BUTTON)
-		cumulative_seconds += SECONDS_IN_MINUTE;
-	else if (currentButtonState == UP_BUTTON + HOURS_BUTTON)
-		cumulative_seconds += SECONDS_IN_HOUR;
-	// Once the value of cumulative_seconds has been modified, display the change on the clock.
-	updateTiming();
-}
-
 
 void alienBulletsUpdate() {
 	alien_fire_count++;
@@ -88,7 +56,58 @@ void alienBulletsUpdate() {
 		alienBulletTicks = rand()%300;
 		alienFire();
 	}
+}
 
+void saucerUpdate() {
+	saucer_count++;
+	if (getSaucerDirection() == 0 && saucer_count >= saucerTicks) {
+		saucer_count = 0;
+		saucerTicks = rand()%400;
+		if (saucerTicks < 400)
+			saucerTicks = 400;
+		int direction = (rand()%2) ? 1 : -1;
+		if (direction == 1){
+			point_t saucerStart;
+			saucerStart.x = -32;
+			saucerStart.y = 40;
+			setSaucerPos(saucerStart);
+		}
+		else{
+			point_t saucerStart;
+			saucerStart.x = 640;
+			saucerStart.y = 40;
+			setSaucerPos(saucerStart);
+		}
+		setSaucerDirection(direction);
+	}
+	if (getSaucerDirection() != 0 && saucer_count % 2 == 0) {
+		saucer_count = 0;
+		// erase
+		drawSaucer(true);
+		// update location and draw new Saucer
+		point_t newSaucerPos;
+		newSaucerPos.y = getSaucerPos().y;
+		if (getSaucerDirection() == 1)
+			newSaucerPos.x = getSaucerPos().x + 2;
+		else
+			newSaucerPos.x = getSaucerPos().x - 2;
+		if (newSaucerPos.x > 640 || newSaucerPos.x < -32) {
+			setSaucerDirection(0);
+			saucer_count = 0; // is this needed?
+		} else {
+			setSaucerPos(newSaucerPos);
+		}
+		drawSaucer(false);
+	}
+}
+
+void checkExplosion() {
+	if (getDeadAlien() != -1 && alien_explosion_count >= 30) {
+		eraseAlienSpot();
+		setDeadAlien(-1);
+		updateScore();
+		alien_explosion_count = 0;
+	}
 }
 
 // This is invoked in response to a timer interrupt.
@@ -97,70 +116,67 @@ void timer_interrupt_handler() {
 	// Increment the following counters:
 	fit_timer_count++;
 	debounce_timer_count++;
-	auto_inc_timer_count++;
+	alien_explosion_count++;
 
 	alienBulletsUpdate();
+	saucerUpdate();
 
 	int rightVal = MOVE_TANK_RIGHT;
 	int leftVal = MOVE_TANK_LEFT;
+	int fire = TANK_FIRE;
 	// This waits the given amount of time, so that button presses can be properly debounced.
 	if (debounce_timer_count >= BUTTON_DEBOUNCE_WAIT) {
-		if (currentButtonState == leftVal){
+		if ((currentButtonState == leftVal || currentButtonState == leftVal + fire) && getTankPositionGlobal() >= TANK_BORDER_LEFT){
 			setTankPositionGlobal(getTankPositionGlobal() - 5);
 			drawTank(false, 0, 0);
 		}
-		else if (currentButtonState == rightVal){
+		else if ((currentButtonState == rightVal || currentButtonState == rightVal + fire) && getTankPositionGlobal() <= TANK_BORDER_RIGHT){
 			setTankPositionGlobal(getTankPositionGlobal() + 5);
 			drawTank(false, 0, 0);
 		}
-		else {
-			if (!getBulletStatus()){
-				xil_printf("tank bullet fired\n\r");
-				setBulletStatus(true);
-				point_t bullet;
-				bullet.x = getTankPositionGlobal() + 15;
-				bullet.y = 410;
-				setTankBulletPosition(bullet);
-				drawTankBullet(false);
-			}
-			else{
-				xil_printf("A Tank Bullet already is in motion\n\r");
-			}
+		if (!getBulletStatus() && (currentButtonState == fire || currentButtonState == rightVal + fire || currentButtonState == leftVal + fire)){
+			//xil_printf("tank bullet fired\n\r");
+			setBulletStatus(true);
+			point_t bullet;
+			bullet.x = getTankPositionGlobal() + 15;
+			bullet.y = 410;
+			setTankBulletPosition(bullet);
+			drawTankBullet(false);
 		}
 		debounce_timer_count = 0;
 	}
 
-	point_t tank_bullet;
+	checkExplosion();
+
 	 if (getBulletStatus()) {
+		point_t tank_bullet;
 		 tank_bullet.x = getTankBulletPosition().x;
 		 tank_bullet.y = getTankBulletPosition().y-3;
+		 setTankBulletPosition(tank_bullet);
+		 drawTankBullet(true);
+		 checkHits();
 	 }
-	 setTankBulletPosition(tank_bullet);
-	 drawTankBullet(true);
 	 updateBullets();
 
-	// The following block checks to see if a button press has lasted for 1 second or more.
-	// If it has, then it will update the clock at a rate of twice per second, given the buttons are still pressed.
-	if (auto_inc_timer_count >= TICKS_PER_SECOND/2) {		// auto_inc_timer_count has reached 50ms.
-		if (auto_inc_timer_count >= TICKS_PER_SECOND) {		// auto_inc_timer_count has reached 100ms.
-			if (currentButtonState != 0) {					// At least one button is pressed.
-				setClock();									// Set the clock based on the button values.
-				// Reset auto_inc_timer_count to 50.
-				// Thus once auto_inc_timer_count has waited 1 second, the following code will then execute every half second.
-				auto_inc_timer_count = TICKS_PER_SECOND/2;
-			}
-			else
-				auto_inc_timer_count = 0;
-		}
-	}
 	// This waits a full second in FIT ticks, and updates cumulative seconds if there are no button presses.
 	if (fit_timer_count >= getAlienTicks()) {
 		drawAliens();
 		fit_timer_count = 0;			// Reset the counter.
 	}
 
-
-
+	if (getSaucerBonus() != 0 && saucerFlashTime >= SAUCER_FLASH_TICKS && flashNum != 4){
+		flashNum++;
+		saucerFlashTime = 0;
+		currentFlashState = ! currentFlashState;
+		displaySaucerBonus(currentFlashState);
+	}
+	if (flashNum == 4){
+		flashNum = 0;
+		currentFlashState = true;
+		displaySaucerBonus(currentFlashState);
+		setSaucerBonus(0);
+	}
+	saucerFlashTime++;
 	// If there are no button presses, do not try to debounce a button.
 	// This means the debounce_timer_count needs to be reset.
 	if (!currentButtonState) {
@@ -178,7 +194,6 @@ void pb_interrupt_handler() {
 	XGpio_InterruptGlobalEnable(&gpPB);                 // Re-enable PB interrupts.
 	// Because there is a change in the button state, the button counters need to be reinitialized.
 	debounce_timer_count = 0;
-	auto_inc_timer_count = 0;
 }
 
 // Main interrupt handler, queries the interrupt controller to see what peripheral

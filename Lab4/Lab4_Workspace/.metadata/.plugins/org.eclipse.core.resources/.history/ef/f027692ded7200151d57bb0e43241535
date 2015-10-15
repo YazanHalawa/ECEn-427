@@ -1,0 +1,33 @@
+/*
+ * render.h
+ *
+ *  Created on: Sep 26, 2015
+ *      Author: superman
+ */
+
+#ifndef RENDER_H_
+#define RENDER_H_
+#include <stdbool.h>
+
+void drawTank(bool staticTank, int startRow, int startCol);
+
+void erodeBunker(int erosionState, int BunkerNumber, int segmentNumX, int segmentY);
+void destroyPartOfBunker(const int array[], int BunkerNumber, int segmentNumRow, int segmentCol);
+
+void drawAliens();
+
+void alienFire();
+
+void updateBullets();
+
+void drawTankBullet(bool reset);
+
+void render();
+
+void render_init(unsigned int * fp);
+
+void checkHits();
+
+void eraseAlienSpot();
+
+#endif /* RENDER_H_ */

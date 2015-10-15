@@ -8,6 +8,8 @@
 #define BLACK 0x00000000;
 #define GREEN 0x0000FF00;
 #define WHITE 0xFFFFFFFF;
+#define RED 0x00FF0000;
+#define BULLET_WHITE 0xFFFFFFFE;
 
 #define ALIEN_COLUMNS 11;
 #define ALIEN_ROWS 5;
@@ -15,6 +17,8 @@
 #define ALIEN_BLOCK_POSITION_INIT_Y 60;
 #define ALIEN_PIXEL_WIDTH 24;
 #define ALIEN_PIXEL_HEIGHT 16;
+#define SAUCER_PIXEL_WIDTH 32;
+#define SAUCER_PIXEL_HEIGHT 14;
 #define BULLET_PIXEL_WIDTH 6;
 #define BULLET_PIXEL_HEIGHT 10;
 #define HORIZONTAL_DISTANCE_BETWEEN_ALIENS 12;
@@ -42,6 +46,8 @@
 
 #define SCALING_FACTOR 2;
 
+
+
 enum bullet_type {
 	T_type,
 	S_type,
@@ -67,8 +73,21 @@ typedef struct {
 	int bullet_stage;
 } bullet;
 
+int getScore();
+void setScore(unsigned int newVal);
+
+int getSaucerBonus();
+void setSaucerBonus(int newVal);
+
+int getDeadAlien();
+void setDeadAlien(int newVal);
+
+void setOldAlienPos(point_t newVal);
+point_t getOldAlienPos();
+
 int getAlienTicks();
 
+void checkHits();
 void setTankPositionGlobal(unsigned short val);
 unsigned short getTankPositionGlobal();
 
@@ -94,6 +113,11 @@ void incrementBulletStage(int index);
 bool getCurrentBulletA();
 
 void switchCurrentBulletA();
+
+int getSaucerDirection();
+void setSaucerDirection(int newVal);
+point_t getSaucerPos();
+void setSaucerPos(point_t newVal);
 
 void initAliveAliens();
 point_t getAlienBlockPosition();

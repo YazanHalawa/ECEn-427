@@ -10,4 +10,6 @@
 
 int interruptManager (unsigned int * framePointer0);
 
+void resetAlienExplosionCount();
+
 #endif /* INTERRUPTS_H_ */
