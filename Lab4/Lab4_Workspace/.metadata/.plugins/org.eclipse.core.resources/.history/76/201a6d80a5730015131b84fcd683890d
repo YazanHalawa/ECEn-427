@@ -1,0 +1,280 @@
+/*
+ * clock.c
+ *
+ *  Created on: Sep 11, 2015
+ *      Author: superman
+ */
+
+#include "render.h"
+#include "globals.h"
+#include "xgpio.h"          // Provides access to PB GPIO driver.
+#include <stdio.h>          // xil_printf and so forth.
+#include "platform.h"       // Enables caching and other system stuff.
+#include "mb_interface.h"   // provides the microblaze interrupt enables, etc.
+#include "xintc_l.h"        // Provides handy macros for the interrupt controller.
+#include "time.h"
+
+#define TICKS_PER_SECOND 100		// There are 100 FIT ticks per seconds.
+#define BUTTON_DEBOUNCE_WAIT 4		// Wait 4 FIT ticks (40ms) for a button debounce.
+#define TANK_BORDER_RIGHT 600
+#define TANK_BORDER_LEFT 10
+#define SAUCER_FLASH_TICKS 30
+#define TANK_FLASH_TICKS 20
+
+#define MOVE_TANK_LEFT 8;
+#define MOVE_TANK_RIGHT 2;
+#define TANK_FIRE 1;
+
+XGpio gpLED;  // This is a handle for the LED GPIO block.
+XGpio gpPB;   // This is a handle for the push-button GPIO block.
+
+// The program uses the following counters.
+// The counters are all initialized to 0.
+static u32 fit_timer_count = 0;
+static u32 debounce_timer_count = 0;
+static u32 alien_explosion_count = 0;
+static u32 alien_fire_count = 0;
+static u32 saucer_count = 0;
+static u32 currentButtonState = 0;
+static u32 alienBulletTicks = 500;
+static u32 saucerTicks = 2000; // wait 20 seconds before saucer comes
+static bool currentFlashState = true;
+static int flashNum = 0;
+static int saucerFlashTime = 0;
+static int tankFlashNum = 0;
+static int TankFlashTime = 0;
+static bool TankFlashState = true;
+static u32 utilization1 = 0;
+
+void resetAlienExplosionCount() {
+	alien_explosion_count = 0;
+}
+
+void alienBulletsUpdate() {
+	alien_fire_count++;
+	if (alien_fire_count >= alienBulletTicks) {
+		// fire a bullet
+		alien_fire_count = 0;
+		alienBulletTicks = rand()%300;
+		alienFire();
+	}
+}
+
+void saucerUpdate() {
+	saucer_count++;
+	if (getSaucerDirection() == 0 && saucer_count >= saucerTicks) {
+		saucer_count = 0;
+		saucerTicks = rand()%2000;
+		if (saucerTicks < 400)
+			saucerTicks = 400;
+		int direction = (rand()%2) ? 1 : -1;
+		if (direction == 1){
+			point_t saucerStart;
+			saucerStart.x = -32;
+			saucerStart.y = 40;
+			setSaucerPos(saucerStart);
+		}
+		else{
+			point_t saucerStart;
+			saucerStart.x = 640;
+			saucerStart.y = 40;
+			setSaucerPos(saucerStart);
+		}
+		setSaucerDirection(direction);
+	}
+	if (getSaucerDirection() != 0 && saucer_count % 2 == 0) {
+		saucer_count = 0;
+		// erase
+		drawSaucer(true);
+		// update location and draw new Saucer
+		point_t newSaucerPos;
+		newSaucerPos.y = getSaucerPos().y;
+		if (getSaucerDirection() == 1)
+			newSaucerPos.x = getSaucerPos().x + 2;
+		else
+			newSaucerPos.x = getSaucerPos().x - 2;
+		if (newSaucerPos.x > 640 || newSaucerPos.x < -32) {
+			setSaucerDirection(0);
+			saucer_count = 0; // is this needed?
+		} else {
+			setSaucerPos(newSaucerPos);
+		}
+		drawSaucer(false);
+	}
+}
+
+void checkExplosion() {
+	if (getDeadAlien() != -1 && alien_explosion_count >= 15) {
+		eraseAlienSpot();
+		setDeadAlien(-1);
+		updateScore();
+		alien_explosion_count = 0;
+	}
+}
+
+// This is invoked in response to a timer interrupt.
+// It does 2 things: 1) debounce switches, and 2) advances the time.
+void timer_interrupt_handler() {
+	// Increment the following counters:
+	//utilization1++;
+	long time1 = console.time(0);
+	fit_timer_count++;
+	debounce_timer_count++;
+	alien_explosion_count++;
+
+	if ((getAlienBlockPosition().y + ((getBottomRow()+1)*24)) >= 395) {
+		setEndOfGame(true);
+	}
+
+	alienBulletsUpdate();
+	saucerUpdate();
+
+	int rightVal = MOVE_TANK_RIGHT;
+	int leftVal = MOVE_TANK_LEFT;
+	int fire = TANK_FIRE;
+	// This waits the given amount of time, so that button presses can be properly debounced.
+	if (debounce_timer_count >= BUTTON_DEBOUNCE_WAIT && !isTankHit()) {
+		if ((currentButtonState == leftVal || currentButtonState == leftVal + fire) && getTankPositionGlobal() >= TANK_BORDER_LEFT){
+			setTankPositionGlobal(getTankPositionGlobal() - 5);
+			drawTank(false, 0, 0);
+		}
+		else if ((currentButtonState == rightVal || currentButtonState == rightVal + fire) && getTankPositionGlobal() <= TANK_BORDER_RIGHT){
+			setTankPositionGlobal(getTankPositionGlobal() + 5);
+			drawTank(false, 0, 0);
+		}
+		if (!getBulletStatus() && (currentButtonState == fire || currentButtonState == rightVal + fire || currentButtonState == leftVal + fire)){
+			//xil_printf("tank bullet fired\n\r");
+			setBulletStatus(true);
+			point_t bullet;
+			bullet.x = getTankPositionGlobal() + 15;
+			bullet.y = 410;
+			setTankBulletPosition(bullet);
+			drawTankBullet(false);
+		}
+		debounce_timer_count = 0;
+	}
+
+	checkExplosion();
+
+	if (getBulletStatus()) {
+		point_t tank_bullet;
+		tank_bullet.x = getTankBulletPosition().x;
+		tank_bullet.y = getTankBulletPosition().y-3;
+		setTankBulletPosition(tank_bullet);
+		drawTankBullet(true);
+		checkHits();
+	}
+	updateBullets();
+
+	// This waits a full second in FIT ticks, and updates cumulative seconds if there are no button presses.
+	if (fit_timer_count >= getAlienTicks()) {
+		drawAliens();
+		fit_timer_count = 0;			// Reset the counter.
+	}
+
+	if (getSaucerBonus() != 0 && saucerFlashTime >= SAUCER_FLASH_TICKS && flashNum != 4){
+		flashNum++;
+		saucerFlashTime = 0;
+		currentFlashState = ! currentFlashState;
+		displaySaucerBonus(currentFlashState);
+	}
+	if (flashNum == 4){
+		flashNum = 0;
+		currentFlashState = true;
+		displaySaucerBonus(currentFlashState);
+		setSaucerBonus(0);
+	}
+	saucerFlashTime++;
+
+
+	if (isTankHit() && TankFlashTime >= TANK_FLASH_TICKS && tankFlashNum != 4){
+		tankFlashNum++;
+		TankFlashTime = 0;
+		TankFlashState = !TankFlashState;
+		if (tankFlashNum <= 1)
+			flashTank(TankFlashState, true);
+		else
+			flashTank(TankFlashState, false);
+	}
+	if (isTankHit() && tankFlashNum == 4){
+		tankFlashNum = 0;
+		TankFlashState = true;
+		flashTank(TankFlashState, false);
+		setTankHit(false);
+		setLives(getLives()-1);
+		// Take out one of the lives
+		int startRow = 5;
+		int startCol = 490 + (getLives())*40;
+		drawTank(true, startRow , startCol);
+		// Check if game over
+		if (getLives() == 0){
+			setEndOfGame(true);
+		}else{
+			setTankPositionGlobal(20); // Reset Tank
+			drawTank(false, 0, 0);
+		}
+	}
+	TankFlashTime++;
+
+	// If there are no button presses, do not try to debounce a button.
+	// This means the debounce_timer_count needs to be reset.
+	if (!currentButtonState) {
+		debounce_timer_count = 0;
+	}
+}
+
+// This is invoked each time there is a change in the button state (result of a push or a bounce).
+void pb_interrupt_handler() {
+	// Clear the GPIO interrupt.
+	XGpio_InterruptGlobalDisable(&gpPB);                // Turn off all PB interrupts for now.
+	currentButtonState = XGpio_DiscreteRead(&gpPB, 1);  // Get the current state of the buttons.
+	// You need to do something here.
+	XGpio_InterruptClear(&gpPB, 0xFFFFFFFF);            // Ack the PB interrupt.
+	XGpio_InterruptGlobalEnable(&gpPB);                 // Re-enable PB interrupts.
+	// Because there is a change in the button state, the button counters need to be reinitialized.
+	debounce_timer_count = 0;
+}
+
+// Main interrupt handler, queries the interrupt controller to see what peripheral
+// fired the interrupt and then dispatches the corresponding interrupt handler.
+// This routine acks the interrupt at the controller level but the peripheral
+// interrupt must be ack'd by the dispatched interrupt handler.
+void interrupt_handler_dispatcher(void* ptr) {
+	int intc_status = XIntc_GetIntrStatus(XPAR_INTC_0_BASEADDR);
+	// Check the FIT interrupt first.
+	if (intc_status & XPAR_FIT_TIMER_0_INTERRUPT_MASK){
+		XIntc_AckIntr(XPAR_INTC_0_BASEADDR, XPAR_FIT_TIMER_0_INTERRUPT_MASK);
+		timer_interrupt_handler();
+	}
+	// Check the push buttons.
+	if (intc_status & XPAR_PUSH_BUTTONS_5BITS_IP2INTC_IRPT_MASK){
+		XIntc_AckIntr(XPAR_INTC_0_BASEADDR, XPAR_PUSH_BUTTONS_5BITS_IP2INTC_IRPT_MASK);
+		pb_interrupt_handler();
+	}
+}
+
+int interruptManager (unsigned int * framePointer0) {
+	init_platform();
+	// Initialize the GPIO peripherals.
+	int success;
+	success = XGpio_Initialize(&gpPB, XPAR_PUSH_BUTTONS_5BITS_DEVICE_ID);
+	// Set the push button peripheral to be inputs.
+	XGpio_SetDataDirection(&gpPB, 1, 0x0000001F);
+	// Enable the global GPIO interrupt for push buttons.
+	XGpio_InterruptGlobalEnable(&gpPB);
+	// Enable all interrupts in the push button peripheral.
+	XGpio_InterruptEnable(&gpPB, 0xFFFFFFFF);
+
+	microblaze_register_handler(interrupt_handler_dispatcher, NULL);
+	XIntc_EnableIntr(XPAR_INTC_0_BASEADDR,
+			(XPAR_FIT_TIMER_0_INTERRUPT_MASK | XPAR_PUSH_BUTTONS_5BITS_IP2INTC_IRPT_MASK));
+	XIntc_MasterEnable(XPAR_INTC_0_BASEADDR);
+	microblaze_enable_interrupts();
+
+	while(!isEndOfGame()); // Program never ends.
+	drawGameOver();
+	xil_printf("Utilization: %d\n\r", utilization1);
+	cleanup_platform();
+
+	return 0;
+}

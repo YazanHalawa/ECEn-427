@@ -12,6 +12,8 @@
 #include "platform.h"       // Enables caching and other system stuff.
 #include "mb_interface.h"   // provides the microblaze interrupt enables, etc.
 #include "xintc_l.h"        // Provides handy macros for the interrupt controller.
+#include <time.h>
+#include "xtmrctr.h"
 
 #define TICKS_PER_SECOND 100		// There are 100 FIT ticks per seconds.
 #define BUTTON_DEBOUNCE_WAIT 4		// Wait 4 FIT ticks (40ms) for a button debounce.
@@ -23,6 +25,9 @@
 #define MOVE_TANK_LEFT 8;
 #define MOVE_TANK_RIGHT 2;
 #define TANK_FIRE 1;
+
+	XTmrCtr Timer;
+	XTmrCtr *instPtr = &Timer;
 
 XGpio gpLED;  // This is a handle for the LED GPIO block.
 XGpio gpPB;   // This is a handle for the push-button GPIO block.
@@ -43,7 +48,7 @@ static int saucerFlashTime = 0;
 static int tankFlashNum = 0;
 static int TankFlashTime = 0;
 static bool TankFlashState = true;
-
+static u32 utilization1 = 0;
 
 void resetAlienExplosionCount() {
 	alien_explosion_count = 0;
@@ -115,6 +120,18 @@ void checkExplosion() {
 // It does 2 things: 1) debounce switches, and 2) advances the time.
 void timer_interrupt_handler() {
 	// Increment the following counters:
+	//utilization1++;
+	XTmrCtr_Stop(instPtr, 0);
+	int val2 = (int) XTmrCtr_GetValue(instPtr, 0);
+	xil_printf(" wait: %d\n\r", val2);
+	XTmrCtr_Reset(instPtr, 0);
+	XTmrCtr_Start(instPtr, 0);
+
+//	void XTmrCtr_SetResetValue(XTmrCtr *InstancePtr, Xuint8 TmrCtrNumber,
+//	                           Xuint32 ResetValue);
+//	Xuint32 XTmrCtr_GetCaptureValue(XTmrCtr *InstancePtr, Xuint8 TmrCtrNumber);
+//	void XTmrCtr_Reset(XTmrCtr *InstancePtr, Xuint8 TmrCtrNumber);
+
 	fit_timer_count++;
 	debounce_timer_count++;
 	alien_explosion_count++;
@@ -218,6 +235,13 @@ void timer_interrupt_handler() {
 	if (!currentButtonState) {
 		debounce_timer_count = 0;
 	}
+
+	XTmrCtr_Stop(instPtr, 0);
+	int val = (int) XTmrCtr_GetValue(instPtr, 0);
+	xil_printf("after loop: %d\n\r", val);
+	XTmrCtr_Reset(instPtr, 0);
+	XTmrCtr_Start(instPtr, 0);
+
 }
 
 // This is invoked each time there is a change in the button state (result of a push or a bounce).
@@ -254,7 +278,9 @@ int interruptManager (unsigned int * framePointer0) {
 	init_platform();
 	// Initialize the GPIO peripherals.
 	int success;
-	print("Real-Time Clock\n\r");
+
+	XTmrCtr_Initialize(instPtr, 0);
+
 	success = XGpio_Initialize(&gpPB, XPAR_PUSH_BUTTONS_5BITS_DEVICE_ID);
 	// Set the push button peripheral to be inputs.
 	XGpio_SetDataDirection(&gpPB, 1, 0x0000001F);
@@ -269,9 +295,17 @@ int interruptManager (unsigned int * framePointer0) {
 	XIntc_MasterEnable(XPAR_INTC_0_BASEADDR);
 	microblaze_enable_interrupts();
 
+	XTmrCtr Timer;
+	XTmrCtr *instPtr = &Timer;
+	XTmrCtr_Initialize(instPtr, 0);
+	XTmrCtr_Start(instPtr, 0);
 	while(!isEndOfGame()); // Program never ends.
-	drawGameOver();
+	XTmrCtr_Stop(instPtr, 0);
+	int val = (int) XTmrCtr_GetValue(instPtr, 0);
+	xil_printf("%d\n\r", val);
 
+	drawGameOver();
+	xil_printf("Utilization: %d\n\r", utilization1);
 	cleanup_platform();
 
 	return 0;

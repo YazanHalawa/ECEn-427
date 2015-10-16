@@ -10,7 +10,9 @@ src/interrupts.d src/interrupts.o: ../src/interrupts.c ../src/render.h \
   ../src/platform.h ../src/platform_config.h \
   ../../hello_world_bsp_0/microblaze_0/include/mb_interface.h \
   ../../hello_world_bsp_0/microblaze_0/include/xintc_l.h \
-  ../../hello_world_bsp_0/microblaze_0/include/xparameters.h
+  ../../hello_world_bsp_0/microblaze_0/include/xparameters.h \
+  ../../hello_world_bsp_0/microblaze_0/include/xtmrctr.h \
+  ../../hello_world_bsp_0/microblaze_0/include/xtmrctr_l.h
 
 ../src/render.h:
 
@@ -41,3 +43,7 @@ src/interrupts.d src/interrupts.o: ../src/interrupts.c ../src/render.h \
 ../../hello_world_bsp_0/microblaze_0/include/xintc_l.h:
 
 ../../hello_world_bsp_0/microblaze_0/include/xparameters.h:
+
+../../hello_world_bsp_0/microblaze_0/include/xtmrctr.h:
+
+../../hello_world_bsp_0/microblaze_0/include/xtmrctr_l.h:
