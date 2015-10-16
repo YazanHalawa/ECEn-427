@@ -2,4 +2,49 @@
 **** Build of configuration Debug for project hello_world_0 ****
 
 make all 
-make: Nothing to be done for `all'.
+Building file: ../src/globals.c
+Invoking: MicroBlaze gcc compiler
+mb-gcc -Wall -O3 -g3 -c -fmessage-length=0 -I../../hello_world_bsp_0/microblaze_0/include -mlittle-endian -mxl-barrel-shift -mxl-pattern-compare -mcpu=v8.20.b -mno-xl-soft-mul -MMD -MP -MF"src/globals.d" -MT"src/globals.d" -o"src/globals.o" "../src/globals.c"
+Finished building: ../src/globals.c
+' '
+Building file: ../src/interrupts.c
+Invoking: MicroBlaze gcc compiler
+mb-gcc -Wall -O3 -g3 -c -fmessage-length=0 -I../../hello_world_bsp_0/microblaze_0/include -mlittle-endian -mxl-barrel-shift -mxl-pattern-compare -mcpu=v8.20.b -mno-xl-soft-mul -MMD -MP -MF"src/interrupts.d" -MT"src/interrupts.d" -o"src/interrupts.o" "../src/interrupts.c"
+Finished building: ../src/interrupts.c
+' '
+Building file: ../src/render.c
+Invoking: MicroBlaze gcc compiler
+mb-gcc -Wall -O3 -g3 -c -fmessage-length=0 -I../../hello_world_bsp_0/microblaze_0/include -mlittle-endian -mxl-barrel-shift -mxl-pattern-compare -mcpu=v8.20.b -mno-xl-soft-mul -MMD -MP -MF"src/render.d" -MT"src/render.d" -o"src/render.o" "../src/render.c"
+Finished building: ../src/render.c
+' '
+Building file: ../src/vdmaTest.c
+Invoking: MicroBlaze gcc compiler
+mb-gcc -Wall -O3 -g3 -c -fmessage-length=0 -I../../hello_world_bsp_0/microblaze_0/include -mlittle-endian -mxl-barrel-shift -mxl-pattern-compare -mcpu=v8.20.b -mno-xl-soft-mul -MMD -MP -MF"src/vdmaTest.d" -MT"src/vdmaTest.d" -o"src/vdmaTest.o" "../src/vdmaTest.c"
+../src/vdmaTest.c: In function 'main':
+../src/vdmaTest.c:131: warning: unused variable 'input'
+Finished building: ../src/vdmaTest.c
+' '
+Building target: hello_world_0.elf
+Invoking: MicroBlaze gcc linker
+mb-gcc -Wl,-T -Wl,../src/lscript.ld -L../../hello_world_bsp_0/microblaze_0/lib -mlittle-endian -mxl-barrel-shift -mxl-pattern-compare -mcpu=v8.20.b -mno-xl-soft-mul -o"hello_world_0.elf"  ./src/globals.o ./src/interrupts.o ./src/platform.o ./src/render.o ./src/vdmaTest.o   -Wl,--start-group,-lxil,-lgcc,-lc,--end-group
+Finished building target: hello_world_0.elf
+' '
+Invoking: MicroBlaze Print Size
+mb-size hello_world_0.elf  |tee "hello_world_0.elf.size"
+   text	   data	    bss	    dec	    hex	filename
+  59942	   1660	   5638	  67240	  106a8	hello_world_0.elf
+Finished building: hello_world_0.elf.size
+' '
+Invoking: Xilinx ELF Check
+elfcheck hello_world_0.elf -hw ../../SpaceInvaderTestHW2_hw_platform/system.xml -pe microblaze_0  |tee "hello_world_0.elf.elfcheck"
+elfcheck
+Xilinx EDK 13.4 Build EDK_O.87xd
+Copyright (c) 1995-2011 Xilinx, Inc.  All rights reserved.
+
+Command Line: elfcheck -hw ../../SpaceInvaderTestHW2_hw_platform/system.xml -pe
+microblaze_0 hello_world_0.elf 
+
+ELF file	: hello_world_0.elf
+elfcheck passed.
+Finished building: hello_world_0.elf.elfcheck
+' '

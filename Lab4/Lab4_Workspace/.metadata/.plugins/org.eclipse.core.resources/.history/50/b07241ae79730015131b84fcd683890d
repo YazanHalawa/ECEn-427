@@ -1,0 +1,410 @@
+/**
+ *
+ *
+ * globals.c
+ */
+
+// Demonstrates one way to handle globals safely in C.
+#include "globals.h"
+
+#define LEFT 0;
+#define RIGHT 1;
+
+
+// Global variables
+static unsigned short tankPosition;
+static point_t tankBulletPosition;
+static point_t alienBlockPosition;
+static bool aliveAliens[55] = { 1 };
+static bool legsOut = true;
+static bool tankBulletFired = false;
+static bool aliensDirection = RIGHT;
+static int erosionDegree[48];
+static int farthestRightAlienColumn = 10;
+static int farthestLeftAlienColumn = 0;
+static int bottomRowAliens[11];
+static int alienTicks = FIT_TICKS_BETWEEN_ALIEN_BLOCK_MOVEMENT_INIT;
+static bullet alienBullets[4];
+static int deadAlien = -1;
+static point_t oldDeadAlienPos;
+static int saucerDirection = 0;
+static point_t saucerPos = {0,40};
+static unsigned int score = 0;
+static unsigned saucerBonus = 0;
+static bool tankHit = false;
+static bool isGameOver = false;
+static int lives = 3;
+static bool beginningOfGame = true;
+
+bool isInit(){
+	return beginningOfGame;
+}
+
+void setInit(bool newVal){
+	beginningOfGame = newVal;
+}
+
+int getLives(){
+	return lives;
+}
+
+void setLives(int newVal){
+	lives = newVal;
+}
+
+bool isEndOfGame(){
+	return isGameOver;
+}
+
+void setEndOfGame(bool newVal){
+	isGameOver = newVal;
+}
+
+bool isTankHit(){
+	return tankHit;
+}
+
+void setTankHit(bool newVal){
+	tankHit = newVal;
+}
+
+int getSaucerBonus(){
+	return saucerBonus;
+}
+
+void setSaucerBonus(int newVal){
+	saucerBonus = newVal;
+}
+
+int getScore(){
+	return score;
+}
+
+void setScore(unsigned int newVal){
+	score = newVal;
+}
+
+int getSaucerDirection(){
+	return saucerDirection;
+}
+
+void setSaucerDirection(int newVal){
+	saucerDirection = newVal;
+}
+
+point_t getSaucerPos(){
+	return saucerPos;
+}
+
+void setSaucerPos(point_t newVal){
+	saucerPos = newVal;
+}
+
+point_t getOldAlienPos(){
+	return oldDeadAlienPos;
+}
+
+void setOldAlienPos(point_t newVal){
+	oldDeadAlienPos = newVal;
+}
+
+int getDeadAlien() {
+	return deadAlien;
+}
+
+void setDeadAlien(int newVal) {
+	deadAlien = newVal;
+}
+
+
+int getAlienTicks() {
+	return alienTicks;
+}
+
+
+void addAlienBullet() {
+	// Some ints to help with computation.
+	int i;
+	int alienWidth = TOTAL_HORIZONTAL_DISTANCE_BETWEEN_ALIENS;
+	int alienHeight = TOTAL_VERTICAL_DISTANCE_BETWEEN_ALIENS;
+	int alienRows = ALIEN_ROWS;
+	int alienCols = ALIEN_COLUMNS;
+
+	for (i=0; i<alienRows--; i++) {
+		if (!alienBullets[i].is_in_flight) {
+			enum bullet_type t = rand()%2;
+			int alienNumber = COLUMN_DEAD;
+
+			int index = (rand()%alienCols);
+			alienNumber = bottomRowAliens[index];
+			if (alienNumber != -1) { 	// clever programming, but it is written in a way that causes not every tick to shoot....2162
+				alienBullets[i].point.x = alienBlockPosition.x + (index * alienWidth) + 10;
+				alienBullets[i].point.y = alienBlockPosition.y + (((alienNumber/alienCols) + 1)*alienHeight) - 5;
+				alienBullets[i].is_in_flight = true;
+				alienBullets[i].type = t;
+				alienBullets[i].bullet_stage = BULLET_STAGE_0;
+				break;
+			}
+
+		}
+	}
+}
+
+// Returns the bullet struct for a given bullet.
+bullet getAlienBullet(int index){
+	return alienBullets[index];
+}
+
+// Moves an alien bullet down the screen by two pixels
+void shiftAlienBullet(int index) {
+	alienBullets[index].point.y += 2;
+}
+
+// The alien bullets cycle through stages
+// This code increments the stage of an alien bullet.
+void incrementBulletStage(int index) {
+	// Increment the bullet's stage
+	alienBullets[index].bullet_stage++;
+
+	// Some macros used to help with readability
+	int stage0 = BULLET_STAGE_0;
+	int stage3 = BULLET_STAGE_3;
+	int stage4 = BULLET_STAGE_4;
+
+	// The T_type bullet resets after 3 iterations
+	if (alienBullets[index].type == T_type && alienBullets[index].bullet_stage >= stage3)
+		alienBullets[index].bullet_stage = stage0;
+
+	// The S_type bullet resets after 4 iterations.
+	if (alienBullets[index].type == S_type && alienBullets[index].bullet_stage >= stage4)
+		alienBullets[index].bullet_stage = stage0;
+}
+
+// Disable the is_in_flight bool of an alien bullet.
+// This allows the aliens to shoot another bullet.
+void disableBullet(int i) {
+	alienBullets[i].is_in_flight = false;
+}
+
+// Gets the farthest right column with at least one alive alien.
+int getFarthestRightAlienColumn() {
+	return farthestRightAlienColumn;
+}
+
+// Gets the farthest left column with at least one alive alien.
+int getFarthestLeftAlienColumn() {
+	return farthestLeftAlienColumn;
+}
+
+// Called when the aliens reach the edge of the screen.
+// This switches the direction the aliens will move.
+void switchAliensDirection() {
+	aliensDirection = !aliensDirection;
+}
+
+// Returns whether the aliens should be moving left or right.
+bool getAliensDirection() {
+	return aliensDirection;
+}
+
+// Sets the x-coordinate of the tank
+void setTankPositionGlobal(unsigned short val) {
+  tankPosition = val;
+}
+
+// Gets the bool of tankBulletFired.
+// If there currently is a tank bullet in the air,
+// then this will be set to true and disable further
+// tank bullets.
+bool getBulletStatus(){
+	return tankBulletFired;
+}
+
+// Sets the bool of tankBulletFired.
+// If there currently is a tank bullet in the air,
+// then this will be set to true and disable further
+// tank bullets.
+void setBulletStatus(bool newStatus){
+	tankBulletFired = newStatus;
+}
+
+// Gets the degree of erosion of the bunker
+int getErosionDegree(int index){
+	return erosionDegree[index];
+}
+
+// Sets the degree of erosion of the bunker
+void setErosionDegree(int index, int newDegree){
+	erosionDegree[index] = newDegree;
+}
+
+// Gets the x-coordinate of the tank
+unsigned short getTankPositionGlobal() {
+  return tankPosition;
+}
+
+// Initialization code.
+void initAliveAliens() {
+	// Some ints to help us with calculations.
+	int i;
+	int rowSize = ALIEN_ROWS;
+	int blockSize = NUMBER_OF_ALIENS;
+
+	// The array of aliveAliens is initialized to be all true,
+	// because all the aliens start off as being alive.
+	for (i=0; i<blockSize; i++) {
+		aliveAliens[i] = true;
+	}
+
+	// Initialize the alienBlockPosition
+	alienBlockPosition.x = ALIEN_BLOCK_POSITION_INIT_X;
+	alienBlockPosition.y = ALIEN_BLOCK_POSITION_INIT_Y;
+
+	// Initialize the alienBullets to be available for firing.
+	for (i=0; i<rowSize--; i++) {
+		alienBullets[i].is_in_flight = false;
+	}
+
+	for (i=0; i<11; i++) {
+		bottomRowAliens[i] = i+44;
+	}
+
+	xil_printf(" init bottomRowAliens: \n\r");
+	int j;
+	for (j=0; j<11; j++) {
+		xil_printf("  %d, ", bottomRowAliens[j]);
+	}
+}
+
+// Gets the point of the alienBlockPosition
+point_t getAlienBlockPosition() {
+	return alienBlockPosition;
+}
+
+// Checks to see if the alien at index i is alive
+bool getAliveAlien(unsigned int i){
+	return aliveAliens[i];
+}
+
+void killAlien(unsigned int i){
+	// The alien at index i is now dead.
+	// The array of bools is updated to reflect this.
+	aliveAliens[i] = false;
+	alienTicks--;
+
+	// Some ints to help us with calculation
+	int col;
+	int row;
+	int rowSize = ALIEN_ROWS;
+	int colSize = ALIEN_COLUMNS;
+
+	// Because an alien has been killed, we must check to see if there are
+	// any aliens left in the column. If not, we need to shift the value of
+	// farthesLeftAlien to the next available column.
+	for (col=farthestLeftAlienColumn; col<colSize; col++) {
+		for (row=0; row<rowSize; row++) {
+			if (aliveAliens[(row*colSize) + col]) {
+				if (col == farthestLeftAlienColumn) {
+					// There exists an alien in the column of alien i.
+					// Set the iterators to end the loops.
+					row=rowSize; col=colSize;
+				} else {
+					// There does not exist an alien in the column of alien i.
+					// Update the value of farthestLeftAlienColumn to reflect this change.
+					farthestLeftAlienColumn = col;
+					// Set the iterators to end the loops.
+					row=rowSize; col=colSize;
+				}
+			}
+		}
+	}
+
+	// Because an alien has been killed, we must check to see if there are
+	// any aliens left in the column. If not, we need to shift the value of
+	// farthesRightAlien to the next available column
+	for (col=farthestRightAlienColumn; col>0; col--) {
+		for (row=0; row<rowSize; row++) {
+			if (aliveAliens[(row * colSize) + col]) {
+				if (col == farthestRightAlienColumn) {
+					// There exists an alien in the column of alien i.
+					// Set the iterators to end the loops.
+					row=rowSize; col=0;
+				} else {
+					// There does not exist an alien in the column of alien i.
+					// Update the value of farthestLeftAlienColumn to reflect this change.
+					farthestRightAlienColumn = col;
+					// Set the iterators to end the loops.
+					row=rowSize; col=0;
+				}
+			}
+		}
+	}
+	col = i%ALIEN_COLUMNS;
+	bool columnDead = true;
+
+	// Now we must update the array of aliens that can shoot.
+	// If an alien in the bottomRowAliens dies, then it is replaced by
+	// the next available alien above it. If there are no aliens above it,
+	// then the array is given a -1. The -1 serves as a flag that there is no available
+	// alien in the given column
+	for (row = rowSize--; row>=0; row--) {
+		if (aliveAliens[row*colSize + col]) {		// The given alien above alien i is alive
+			if (i == bottomRowAliens[col]) {			// The alien that was killed was in bottomRowAliens.
+				bottomRowAliens[col] = row*colSize + col;	// Maybe this should be row*colSize + col? // before it was just col // RHS: i-colSize
+			columnDead = false;						// The exists an alien in the column.
+			break;
+		}
+	}
+	} else {
+		columnDead = false;	// check
+	}
+
+	xil_printf("bottomRowAliens: \n\r");
+	int j;
+	for (j=0; j<11; j++) {
+		xil_printf("  %d, ", bottomRowAliens[j]);
+	}
+
+	// If the column is dead, then the array needs to be given a -1.
+	// -1 is defined as COLUMN_DEAD.
+	if (columnDead) {
+		bottomRowAliens[col] = COLUMN_DEAD;
+	}
+
+	row = i/ALIEN_COLUMNS;
+	if (row == 0)
+		score += 40;
+	else if (row <= 2)
+		score += 20;
+	else
+		score += 10;
+}
+
+// Invert the bool that defines which way the alien legs are facing.
+void switchLegsOut() {
+	legsOut = !legsOut;
+}
+
+// Get the bool that determines which way the alien legs are facing.
+bool getLegsOut() {
+	return legsOut;
+}
+
+// Use this to update the alienBlockPosition.
+// Its parameters are the new x,y coordinates of alienBlockPosition
+void setAlienBlockPosition(unsigned int x, unsigned int y) {
+	alienBlockPosition.x = x;
+	alienBlockPosition.y = y;
+}
+
+// Use this to set the tankBulletPosition.
+// Its parameter is the point with the new x,y coordinates of tankBulletPosition
+void setTankBulletPosition(point_t val) {
+  tankBulletPosition.x = val.x;
+  tankBulletPosition.y = val.y;
+}
+
+// Get the point of the tankBulletPosition.
+point_t getTankBulletPosition() {
+  return tankBulletPosition;
+}

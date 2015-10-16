@@ -34,6 +34,10 @@ void drawSaucer(bool reset);
 
 void displaySaucerBonus(bool reset);
 
+void flashTank(bool reset, bool isFirst);
+
+void drawGameOver();
+
 void updateScore();
 
 #endif /* RENDER_H_ */

@@ -25,6 +25,10 @@ static bool aliensStillMovingHorizontally = true;
 static unsigned int * framePointer0;
 static const int saucerWidth = SAUCER_PIXEL_WIDTH;
 static const int saucerHeight = SAUCER_PIXEL_HEIGHT;
+static const int green_hex = GREEN;
+static const int white_hex = WHITE;
+static const int black_hex = BLACK;
+
 
 // Draws the tank on the screen.
 void drawTank(bool staticTank, int startRow, int startCol) {
@@ -38,7 +42,7 @@ void drawTank(bool staticTank, int startRow, int startCol) {
 	if (staticTank){
 		for (row = startRow; row < startRow + tankHeight; row++) {
 			for (col = startCol; col < startCol + tankWidth; col++) {
-				if ((tank_15x8[(row - startRow)/scalingFactor] & (1<<((col-startCol)/scalingFactor))) == 0) {
+				if (!isInit() || (tank_15x8[(row - startRow)/scalingFactor] & (1<<((col-startCol)/scalingFactor))) == 0) {
 					framePointer0[row*pixelWidth + col] = BLACK;
 				} else {
 					framePointer0[row*pixelWidth + col] = GREEN;
@@ -70,19 +74,34 @@ void drawTank(bool staticTank, int startRow, int startCol) {
 	}
 }
 
+void clearTank() {
+	int row = 0;
+	int col = 0;
+	int tankWidth = TANK_WIDTH;
+	int tankStart = TANK_ROW_START;
+	int tankStop = TANK_ROW_STOP;
+	int current_position = getTankPositionGlobal();
+	for (row = tankStart; row < tankStop+1; row++) {
+		for (col = current_position; col < current_position + tankWidth; col++) {
+			framePointer0[row*pixelWidth + col] = BLACK;
+		}
+	}
+}
+
 // Erodes part of a given bunker in a given location.
 void destroyPartOfBunker(const int array[], int BunkerNumber, int segmentNumRow, int segmentCol){
 	int row = 0;
 	int col = 0;
 	int incrementRow = segmentNumRow*12;
 	int incrementCol = BunkerNumber*160 + segmentCol*12;
+	int screenColor = BLACK;
 	// Now draw the tank in its new position
 	for (row = 359 + incrementRow; row < 359 + incrementRow + 12; row++) {
 		for (col = 56 + incrementCol; col < 56 + incrementCol + 12; col++) {
-			if ((array[(row - 359 - incrementRow)/scalingFactor] & (1<<((col-56 - incrementCol)/scalingFactor))) == 0) {
-				framePointer0[(row-12)*pixelWidth + col] = BLACK;
+			if (framePointer0[(row)*pixelWidth + col] != screenColor && (array[(row - 359 - incrementRow)/scalingFactor] & (1<<((col-56 - incrementCol)/scalingFactor))) != 0) {
+				framePointer0[(row)*pixelWidth + col] = GREEN;
 			} else {
-				framePointer0[(row-12)*pixelWidth + col] = GREEN;
+				framePointer0[(row)*pixelWidth + col] = BLACK;
 			}
 		}
 	}
@@ -90,21 +109,22 @@ void destroyPartOfBunker(const int array[], int BunkerNumber, int segmentNumRow,
 
 // Called when eroding a bunker by a given degree
 void erodeBunker(int erosionState, int BunkerNumber, int segmentNumRow, int segmentCol){
+	int segmentNum = (BunkerNumber*12) + (segmentNumRow) * 4 + segmentCol;
 	if (erosionState == -1){
-		setErosionDegree(3);
+		setErosionDegree(segmentNum, 3);
 		destroyPartOfBunker(bunkerDamage3_6x6, BunkerNumber, segmentNumRow, segmentCol);
 	}
 	else if (erosionState == 3){
-		setErosionDegree(2);
+		setErosionDegree(segmentNum, 2);
 		destroyPartOfBunker(bunkerDamage2_6x6, BunkerNumber, segmentNumRow, segmentCol);
 	}
 	else if (erosionState == 2){
-		setErosionDegree(1);
+		setErosionDegree(segmentNum, 1);
 		destroyPartOfBunker(bunkerDamage1_6x6, BunkerNumber, segmentNumRow, segmentCol);
 	}
 
 	else if (erosionState == 1){
-		setErosionDegree(0);
+		setErosionDegree(segmentNum, 0);
 		destroyPartOfBunker(bunkerDamage0_6x6, BunkerNumber, segmentNumRow, segmentCol);
 	}
 
@@ -157,9 +177,12 @@ void drawSaucer(bool reset) {
 void drawTopAlien(unsigned int start_x, unsigned int start_y, bool reset) {
 	int row = 0;
 	int col = 0;
-	for (row = start_y; row < start_y+alienHeight; row++) {
-		for (col = start_x; col < start_x+alienWidth; col++) {
-			if ((alien_top_out_12x8[(row - start_y)/scalingFactor] & (1<<((col-start_x)/scalingFactor))) == 0 || reset){
+	for (row = start_y; row < start_y+24; row++) {
+		for (col = start_x; col < start_x+36; col++) {
+			const int bitmapVal = (alien_top_out_16x12[(row - start_y)/scalingFactor] & (1<<((col-start_x)/scalingFactor)));
+			if ((bitmapVal == 0) && (framePointer0[(row)*pixelWidth + col] == green_hex)) {
+				framePointer0[row*pixelWidth + col] = GREEN;
+			} else if (bitmapVal == 0){
 				framePointer0[row*pixelWidth + col] = BLACK;
 			} else {
 				framePointer0[row*pixelWidth + col] = WHITE;
@@ -169,12 +192,15 @@ void drawTopAlien(unsigned int start_x, unsigned int start_y, bool reset) {
 }
 
 // Draw a middle row alien
-void drawMiddleAlien(unsigned int start_x, unsigned int start_y, bool reset) {
+void drawMiddleAlien(unsigned int start_x, unsigned int start_y) {
 	int row = 0;
 	int col = 0;
 	for (row = start_y; row < start_y+alienHeight; row++) {
 		for (col = start_x; col < start_x+alienWidth; col++) {
-			if ((alien_middle_out_12x8[(row - start_y)/scalingFactor] & (1<<((col-start_x)/scalingFactor))) == 0 || reset){
+			const int bitmapVal = (alien_middle_out_16x12[(row - start_y)/scalingFactor] & (1<<((col-start_x)/scalingFactor)));
+			if ((bitmapVal == 0) && (framePointer0[(row)*pixelWidth + col] == green_hex)) {
+				framePointer0[row*pixelWidth + col] = GREEN;
+			} else if (bitmapVal == 0){
 				framePointer0[row*pixelWidth + col] = BLACK;
 			} else {
 				framePointer0[row*pixelWidth + col] = WHITE;
@@ -184,12 +210,16 @@ void drawMiddleAlien(unsigned int start_x, unsigned int start_y, bool reset) {
 }
 
 // Draw a bottom row alien
-void drawBottomAlien(unsigned int start_x, unsigned int start_y, bool reset) {
+void drawBottomAlien(unsigned int start_x, unsigned int start_y) {
 	int row = 0;
 	int col = 0;
 	for (row = start_y; row < start_y+alienHeight; row++) {
 		for (col = start_x; col < start_x+alienWidth; col++) {
-			if ((alien_bottom_out_12x8[(row - start_y)/scalingFactor] & (1<<((col-start_x)/scalingFactor))) == 0 || reset){
+			const int bitmapVal = (alien_bottom_out_16x12[(row - start_y)/scalingFactor] & (1<<((col-start_x)/scalingFactor)));
+			//framePointer0[row*pixelWidth + col] = BLACK;
+			if ((bitmapVal == 0) && (framePointer0[(row)*pixelWidth + col] == green_hex)) {
+				framePointer0[row*pixelWidth + col] = GREEN;
+			} else if (bitmapVal == 0){
 				framePointer0[row*pixelWidth + col] = BLACK;
 			} else {
 				framePointer0[row*pixelWidth + col] = WHITE;
@@ -220,7 +250,7 @@ void drawMiddleAliens(bool reset) {
 		}
 		int alien_start_x = getAlienBlockPosition().x + ((alienNumber-11)*totalAlienWidth);
 		int alien_start_y = getAlienBlockPosition().y + totalAlienHeight;
-		drawMiddleAlien(alien_start_x, alien_start_y, reset);
+		drawMiddleAlien(alien_start_x, alien_start_y);
 	}
 
 	for (alienNumber=22; alienNumber<33; alienNumber++) {
@@ -229,7 +259,7 @@ void drawMiddleAliens(bool reset) {
 		}
 		int alien_start_x = getAlienBlockPosition().x + ((alienNumber-22)*totalAlienWidth);
 		int alien_start_y = getAlienBlockPosition().y + 48;
-		drawMiddleAlien(alien_start_x, alien_start_y, reset);
+		drawMiddleAlien(alien_start_x, alien_start_y);
 	}
 }
 
@@ -242,7 +272,7 @@ void drawBottomAliens(bool reset) {
 		}
 		int alien_start_x = getAlienBlockPosition().x + ((alienNumber-33)*totalAlienWidth);
 		int alien_start_y = getAlienBlockPosition().y + 72;
-		drawBottomAlien(alien_start_x, alien_start_y, reset);
+		drawBottomAlien(alien_start_x, alien_start_y);
 	}
 	for (alienNumber=44; alienNumber<55; alienNumber++) {
 		if (!getAliveAlien(alienNumber)) {
@@ -250,18 +280,21 @@ void drawBottomAliens(bool reset) {
 		}
 		int alien_start_x = getAlienBlockPosition().x + ((alienNumber-44)*totalAlienWidth);
 		int alien_start_y = getAlienBlockPosition().y + 96;
-		drawBottomAlien(alien_start_x, alien_start_y, reset);
+		drawBottomAlien(alien_start_x, alien_start_y);
 	}
 }
 
 
 // Draw a top row alien with legs in
-void drawTopAlien_in(unsigned int start_x, unsigned int start_y, bool reset) {
+void drawTopAlien_in(unsigned int start_x, unsigned int start_y) {
 	int row = 0;
 	int col = 0;
-	for (row = start_y; row < start_y+alienHeight; row++) {
-		for (col = start_x; col < start_x+alienWidth; col++) {
-			if ((alien_top_in_12x8[(row - start_y)/scalingFactor] & (1<<((col-start_x)/scalingFactor))) == 0 || reset){
+	for (row = start_y; row < start_y+24; row++) {
+		for (col = start_x; col < start_x+36; col++) {
+			const int bitmapVal = (alien_top_in_16x12[(row - start_y)/scalingFactor] & (1<<((col-start_x)/scalingFactor)));
+			if ((bitmapVal == 0) && (framePointer0[(row)*pixelWidth + col] == green_hex)) {
+				framePointer0[row*pixelWidth + col] = GREEN;
+			} else if (bitmapVal == 0){
 				framePointer0[row*pixelWidth + col] = BLACK;
 			} else {
 				framePointer0[row*pixelWidth + col] = WHITE;
@@ -271,12 +304,15 @@ void drawTopAlien_in(unsigned int start_x, unsigned int start_y, bool reset) {
 }
 
 // Draw a middle row alien with legs in
-void drawMiddleAlien_in(unsigned int start_x, unsigned int start_y, bool reset) {
+void drawMiddleAlien_in(unsigned int start_x, unsigned int start_y) {
 	int row = 0;
 	int col = 0;
 	for (row = start_y; row < start_y+alienHeight; row++) {
 		for (col = start_x; col < start_x+alienWidth; col++) {
-			if ((alien_middle_in_12x8[(row - start_y)/scalingFactor] & (1<<((col-start_x)/scalingFactor))) == 0 || reset){
+			const int bitmapVal = (alien_middle_in_16x12[(row - start_y)/scalingFactor] & (1<<((col-start_x)/scalingFactor)));
+			if ((bitmapVal == 0) && (framePointer0[(row)*pixelWidth + col] == green_hex)) {
+				framePointer0[row*pixelWidth + col] = GREEN;
+			} else if (bitmapVal == 0){
 				framePointer0[row*pixelWidth + col] = BLACK;
 			} else {
 				framePointer0[row*pixelWidth + col] = WHITE;
@@ -286,12 +322,15 @@ void drawMiddleAlien_in(unsigned int start_x, unsigned int start_y, bool reset) 
 }
 
 // Draw a bottom row alien with legs in
-void drawBottomAlien_in(unsigned int start_x, unsigned int start_y, bool reset) {
+void drawBottomAlien_in(unsigned int start_x, unsigned int start_y) {
 	int row = 0;
 	int col = 0;
 	for (row = start_y; row < start_y+alienHeight; row++) {
 		for (col = start_x; col < start_x+alienWidth; col++) {
-			if ((alien_bottom_in_12x8[(row - start_y)/scalingFactor] & (1<<((col-start_x)/scalingFactor))) == 0 || reset){
+			const int bitmapVal = (alien_bottom_in_16x12[(row - start_y)/scalingFactor] & (1<<((col-start_x)/scalingFactor)));
+			if ((bitmapVal == 0) && (framePointer0[(row)*pixelWidth + col] == green_hex)) {
+				framePointer0[row*pixelWidth + col] = GREEN;
+			} else if (bitmapVal == 0){
 				framePointer0[row*pixelWidth + col] = BLACK;
 			} else {
 				framePointer0[row*pixelWidth + col] = WHITE;
@@ -309,7 +348,7 @@ void drawTopAliens_in(bool reset){
 		}
 		int alien_start_x = getAlienBlockPosition().x + (alienNumber*totalAlienWidth);
 		int alien_start_y = getAlienBlockPosition().y;
-		drawTopAlien_in(alien_start_x, alien_start_y, reset);
+		drawTopAlien_in(alien_start_x, alien_start_y);
 	}
 }
 
@@ -322,7 +361,7 @@ void drawMiddleAliens_in(bool reset) {
 		}
 		int alien_start_x = getAlienBlockPosition().x + ((alienNumber-11)*totalAlienWidth);
 		int alien_start_y = getAlienBlockPosition().y + totalAlienHeight;
-		drawMiddleAlien_in(alien_start_x, alien_start_y, reset);
+		drawMiddleAlien_in(alien_start_x, alien_start_y);
 	}
 
 	for (alienNumber=22; alienNumber<33; alienNumber++) {
@@ -331,7 +370,7 @@ void drawMiddleAliens_in(bool reset) {
 		}
 		int alien_start_x = getAlienBlockPosition().x + ((alienNumber-22)*totalAlienWidth);
 		int alien_start_y = getAlienBlockPosition().y + 48;
-		drawMiddleAlien_in(alien_start_x, alien_start_y, reset);
+		drawMiddleAlien_in(alien_start_x, alien_start_y);
 	}
 }
 
@@ -344,7 +383,7 @@ void drawBottomAliens_in(bool reset) {
 		}
 		int alien_start_x = getAlienBlockPosition().x + ((alienNumber-33)*totalAlienWidth);
 		int alien_start_y = getAlienBlockPosition().y + 72;
-		drawBottomAlien_in(alien_start_x, alien_start_y, reset);
+		drawBottomAlien_in(alien_start_x, alien_start_y);
 	}
 	for (alienNumber=44; alienNumber<55; alienNumber++) {
 		if (!getAliveAlien(alienNumber)) {
@@ -352,7 +391,7 @@ void drawBottomAliens_in(bool reset) {
 		}
 		int alien_start_x = getAlienBlockPosition().x + ((alienNumber-44)*totalAlienWidth);
 		int alien_start_y = getAlienBlockPosition().y + 96;
-		drawBottomAlien_in(alien_start_x, alien_start_y, reset);
+		drawBottomAlien_in(alien_start_x, alien_start_y);
 	}
 }
 
@@ -385,6 +424,7 @@ void drawAliens() {
 	//resetAliens(framePointer0);
 	// First we need to erase the old aliens
 
+	/*
 	if (getLegsOut()) {
 		drawTopAliens(true);
 		drawMiddleAliens(true);
@@ -393,19 +433,19 @@ void drawAliens() {
 		drawTopAliens_in(true);
 		drawMiddleAliens_in(true);
 		drawBottomAliens_in(true);
-	}
+	}*/
 
 	int farthestLeftAlienPosition = getAlienBlockPosition().x + ((getFarthestLeftAlienColumn()) * totalAlienWidth);
 	int farthestRightAlienPosition = getAlienBlockPosition().x + ((getFarthestRightAlienColumn() + 1) * totalAlienWidth);
 	if ((farthestLeftAlienPosition < 20 || farthestRightAlienPosition > 620) && aliensStillMovingHorizontally) {
-		setAlienBlockPosition(getAlienBlockPosition().x, getAlienBlockPosition().y + 5);
+		setAlienBlockPosition(getAlienBlockPosition().x, getAlienBlockPosition().y + 4);
 		switchAliensDirection();
 		aliensStillMovingHorizontally = false;
 	} else {
 		if (getAliensDirection()) {
-			setAlienBlockPosition(getAlienBlockPosition().x + 5, getAlienBlockPosition().y);
+			setAlienBlockPosition(getAlienBlockPosition().x + 4, getAlienBlockPosition().y);
 		} else {
-			setAlienBlockPosition(getAlienBlockPosition().x - 5, getAlienBlockPosition().y);
+			setAlienBlockPosition(getAlienBlockPosition().x - 4, getAlienBlockPosition().y);
 		}
 		aliensStillMovingHorizontally = true;
 	}
@@ -576,31 +616,31 @@ void drawBullets() {
 			if (getAlienBullet(i).type == T_type) {
 				switch(getAlienBullet(i).bullet_stage) {
 				case (0):
-									drawTBullet0(getAlienBullet(i), false);
-				break;
+					drawTBullet0(getAlienBullet(i), false);
+					break;
 				case (1):
-									drawTBullet1(getAlienBullet(i), false);
-				break;
+					drawTBullet1(getAlienBullet(i), false);
+					break;
 				case (2):
-									drawTBullet2(getAlienBullet(i), false);
-				break;
+					drawTBullet2(getAlienBullet(i), false);
+					break;
 				default:
 					break;
 				}
 			} else {
 				switch(getAlienBullet(i).bullet_stage) {
 				case (0):
-									drawSBullet0(getAlienBullet(i), false);
-				break;
+					drawSBullet0(getAlienBullet(i), false);
+					break;
 				case (1):
-									drawSBullet1(getAlienBullet(i), false);
-				break;
+					drawSBullet1(getAlienBullet(i), false);
+					break;
 				case (2):
-									drawSBullet2(getAlienBullet(i), false);
-				break;
+					drawSBullet2(getAlienBullet(i), false);
+					break;
 				case (3):
-									drawSBullet3(getAlienBullet(i), false);
-				break;
+					drawSBullet3(getAlienBullet(i), false);
+					break;
 				default:
 					break;
 				}
@@ -616,6 +656,114 @@ void alienFire() {
 	drawBullets(framePointer0);
 }
 
+int findSegNumRow(int bulletY, bool addInc){
+	xil_printf(" bullet Y is %d\n\r", bulletY);
+	//	int BunkerStart = 359;
+	int incr = 0;
+	if (addInc)
+		incr = 9;
+	if (bulletY <= 359 + 12 + incr){
+		return 0;
+	} else if (bulletY <= 359 + 24 + incr){
+		return 1;
+	} else {
+		return 2;
+	}
+}
+int findSegNumCol(int bulletX, int midBunkerPos){
+	if (bulletX <= midBunkerPos){
+		if (bulletX <= midBunkerPos - 12){
+			return 0;
+		} else {
+			return 1;
+		}
+	} else {
+		if (bulletX <= midBunkerPos + 12){
+			return 2;
+		}else{
+			return 3;
+		}
+	}
+}
+
+void clearAlienBullet(bool hit, bullet b) {
+	int rowStart = b.point.y;
+	int colStart = b.point.x;
+	int row, col;
+	for (row = rowStart; row < rowStart + bulletHeight; row++){
+		for (col = colStart; col < colStart + bulletWidth; col++){
+			if (hit){
+				framePointer0[row*pixelWidth + col] = GREEN;
+			}
+			else{
+				framePointer0[row*pixelWidth + col] = BLACK;
+			}
+		}
+	}
+}
+
+bool checkAlienBulletHits(int i) {
+	bullet b = getAlienBullet(i);
+/*	unsigned int temp = framePointer0[(b.point.y * pixelWidth) + b.point.x + 6];
+	// Also check next to the head of the bullet (because alien bullets are more than one pixel wide)
+	unsigned int temp_r1 = framePointer0[((b.point.y+1) * pixelWidth) + b.point.x + 6];
+	unsigned int temp_l1 = framePointer0[((b.point.y-1) * pixelWidth) + b.point.x + 6];
+	unsigned int temp_r2 = framePointer0[((b.point.y+2) * pixelWidth) + b.point.x + 6];
+	unsigned int temp_l2 = framePointer0[((b.point.y-2) * pixelWidth) + b.point.x + 6];*/
+	bool hit = false;
+	int loop;
+	for(loop = -4; loop <= 4; loop++) {
+		if (framePointer0[((b.point.y+10) * pixelWidth) + b.point.x + loop] == green_hex) {
+			hit = true;
+		}
+	}
+
+	if (hit) {
+		if (b.point.y >= 400) {
+			disableBullet(i);
+			setTankHit(true);
+			return false;
+		}
+		else {
+			int segmentNumRow, segmentNumCol;
+			int bunkerNum;
+			int bulletX = getAlienBullet(i).point.x;
+			int bulletY = getAlienBullet(i).point.y;
+			if (bulletX < 160){
+				bunkerNum = 0;
+				segmentNumCol = findSegNumCol(bulletX, 80);
+				segmentNumRow = findSegNumRow(bulletY, false);
+			}
+			else if (bulletX < 320){
+				bunkerNum = 1;
+				segmentNumCol = findSegNumCol(bulletX, 240);
+				segmentNumRow = findSegNumRow(bulletY, false);
+			}
+			else if (bulletX < 480){
+				bunkerNum = 2;
+				segmentNumCol = findSegNumCol(bulletX, 400);
+				segmentNumRow = findSegNumRow(bulletY, false);
+			}
+			else{
+				bunkerNum = 3;
+				segmentNumCol = findSegNumCol(bulletX, 560);
+				segmentNumRow = findSegNumRow(bulletY, false);
+			}
+
+			int segmentNum = (bunkerNum*12) + (segmentNumRow) * 4 + segmentNumCol;
+			// Check current Erosion state
+			int erosionState = getErosionDegree(segmentNum);
+			xil_printf("%d %d %d\n\r", segmentNumRow, segmentNumCol, segmentNum);
+			erodeBunker(erosionState, bunkerNum, segmentNumRow, segmentNumCol);
+			disableBullet(i);
+			return false;
+		}
+	}
+	return true;
+}
+
+
+
 // Update the locations of all alien bullets.
 // This generally means moving the bullets down by two pixels.
 // However, it also erases the bullets when they reach the bottom line.
@@ -623,38 +771,43 @@ void updateBullets() {
 	int i;
 	for (i=0; i<4; i++) {
 		if (getAlienBullet(i).is_in_flight) {
-			drawTBullet0(getAlienBullet(i), true);
+			//drawTBullet0(getAlienBullet(i), true);
+			int isHit = checkAlienBulletHits(i);
+		//	if (isHit)
+				clearAlienBullet(false, getAlienBullet(i));
+		//	else
+			//	clearAlienBullet(true, getAlienBullet(i));
 			shiftAlienBullet(i);
-			incrementBulletStage(i);
-			if (getAlienBullet(i).point.y < 430) {
+			if (getAlienBullet(i).point.y < 430 && isHit) {
+				incrementBulletStage(i);
 				if (getAlienBullet(i).type == T_type) {
 					switch(getAlienBullet(i).bullet_stage) {
 					case (0):
-										drawTBullet0(getAlienBullet(i), false);
-					break;
+						drawTBullet0(getAlienBullet(i), false);
+						break;
 					case (1):
-										drawTBullet1(getAlienBullet(i), false);
-					break;
+						drawTBullet1(getAlienBullet(i), false);
+						break;
 					case (2):
-										drawTBullet2(getAlienBullet(i), false);
-					break;
+						drawTBullet2(getAlienBullet(i), false);
+						break;
 					default:
 						break;
 					}
 				} else {
 					switch(getAlienBullet(i).bullet_stage) {
 					case (0):
-										drawSBullet0(getAlienBullet(i), false);
-					break;
+						drawSBullet0(getAlienBullet(i), false);
+						break;
 					case (1):
-										drawSBullet1(getAlienBullet(i), false);
-					break;
+						drawSBullet1(getAlienBullet(i), false);
+						break;
 					case (2):
-										drawSBullet2(getAlienBullet(i), false);
-					break;
+						drawSBullet2(getAlienBullet(i), false);
+						break;
 					case (3):
-										drawSBullet3(getAlienBullet(i), false);
-					break;
+						drawSBullet3(getAlienBullet(i), false);
+						break;
 					default:
 						break;
 					}
@@ -664,7 +817,6 @@ void updateBullets() {
 			}
 		}
 	}
-
 }
 void clearBullet() {
 	int row;
@@ -691,7 +843,7 @@ void destroyAlien(int rowNum, int colNum) {
 			if ((alien_explosion_12x10[(row - startRow)/scalingFactor] & (1<<((col-startCol)/scalingFactor))) == 0){
 				framePointer0[row*pixelWidth + col] = BLACK;
 			} else {
-				framePointer0[row*pixelWidth + col] = WHITE;
+				framePointer0[row*pixelWidth + col] = BULLET_WHITE;
 			}
 		}
 	}
@@ -740,6 +892,33 @@ void displaySaucerBonus(bool reset){
 	}
 }
 
+void flashTank(bool reset, bool isFirst){
+	int startRow = TANK_ROW_START;
+	int startCol = getTankPositionGlobal();
+	int tankStop = TANK_ROW_STOP;
+	int stopCol = startCol + TANK_WIDTH;
+	int row, col;
+	for (row = startRow; row < tankStop; row++) {
+		for (col = startCol; col < stopCol; col++) {
+			if (isFirst){
+				if (reset || (tank_smoulder1_15x8[(row - startRow)/scalingFactor] & (1<<((col-startCol)/scalingFactor))) == 0) {
+					framePointer0[row*pixelWidth + col] = BLACK;
+				} else {
+					framePointer0[row*pixelWidth + col] = GREEN;
+				}
+			}
+			else{
+				if (reset || (tank_smoulder2_15x8[(row - startRow)/scalingFactor] & (1<<((col-startCol)/scalingFactor))) == 0) {
+					framePointer0[row*pixelWidth + col] = BLACK;
+				} else {
+					framePointer0[row*pixelWidth + col] = GREEN;
+				}
+			}
+
+		}
+	}
+}
+
 void checkHits() {
 	int columnCount = ALIEN_COLUMNS;
 	short bullet_x = getTankBulletPosition().x;
@@ -779,11 +958,41 @@ void checkHits() {
 		setSaucerDirection(0);
 	}
 	if (temp == bunkerColor) {
+		// find the bunker piece that needs to be eroded
+		clearBullet();
+		setBulletStatus(false);
+		int segmentNumRow, segmentNumCol;
+		int bunkerNum;
+		int bulletX = getTankBulletPosition().x;
+		int bulletY = getTankBulletPosition().y;
+		if (bulletX < 160){
+			bunkerNum = 0;
+			segmentNumCol = findSegNumCol(bulletX, 80);
+			segmentNumRow = findSegNumRow(bulletY, true);
+		}
+		else if (bulletX < 320){
+			bunkerNum = 1;
+			segmentNumCol = findSegNumCol(bulletX, 240);
+			segmentNumRow = findSegNumRow(bulletY, true);
+		}
+		else if (bulletX < 480){
+			bunkerNum = 2;
+			segmentNumCol = findSegNumCol(bulletX, 400);
+			segmentNumRow = findSegNumRow(bulletY, true);
+		}
+		else{
+			bunkerNum = 3;
+			segmentNumCol = findSegNumCol(bulletX, 560);
+			segmentNumRow = findSegNumRow(bulletY, true);
+		}
 
+		int segmentNum = (bunkerNum*12) + (segmentNumRow) * 4 + segmentNumCol;
+		// Check current Erosion state
+		int erosionState = getErosionDegree(segmentNum);
+		xil_printf("%d %d %d\n\r", segmentNumRow, segmentNumCol, segmentNum);
+		erodeBunker(erosionState, bunkerNum, segmentNumRow, segmentNumCol);
 	}
 }
-
-
 
 // Draw the tank bullet on the screen.
 void drawTankBullet(bool reset){
@@ -868,14 +1077,37 @@ void drawStats(){
 	drawLetter(false, letterColor, startRow, startCol, S_6x5); // Draw S
 	startCol += 30;
 	startRow -= 5;
+	xil_printf("static tank %d\n\r", startCol);
 	drawTank(true, startRow, startCol);
 	startCol += 40;
 	drawTank(true, startRow, startCol);
 	startCol += 40;
 	drawTank(true, startRow, startCol);
+	setInit(false);
 
 
+}
 
+void drawGameOver(){
+	int startRow = 200;
+	int startCol = 240;
+	int letterColor = RED;
+	drawLetter(false, letterColor, startRow, startCol, G_6x5); // Draw G
+	startCol += 15;
+	drawLetter(false, letterColor, startRow, startCol, A_6x5); // Draw A
+	startCol += 15;
+	drawLetter(false, letterColor, startRow, startCol, M_6x5); // Draw M
+	startCol += 15;
+	drawLetter(false, letterColor, startRow, startCol, E_6x5); // Draw E
+	startCol += 30;
+
+	drawLetter(false, letterColor, startRow, startCol, O_6x5); // Draw O
+	startCol += 15;
+	drawLetter(false, letterColor, startRow, startCol, V_6x5); // Draw V
+	startCol += 15;
+	drawLetter(false, letterColor, startRow, startCol, E_6x5); // Draw E
+	startCol += 15;
+	drawLetter(false, letterColor, startRow, startCol, R_6x5); // Draw R
 }
 
 // Render the screen.

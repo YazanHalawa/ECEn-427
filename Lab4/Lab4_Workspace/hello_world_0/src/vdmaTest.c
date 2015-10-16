@@ -132,8 +132,13 @@ int main()
 	 render_init(framePointer0);
 	 setTankPositionGlobal(20);
 	 render(framePointer0);
-	 interruptManager(framePointer0);
-     while (1) {
+	 // Init bunker erosion states
+	 int i;
+	 for (i = 0; i < 48; i++){
+		 setErosionDegree(i, -1);
+	 }
+	interruptManager(framePointer0);
+/*     while (1) {
     	 input = getchar();
          if (XST_FAILURE == XAxiVdma_StartParking(&videoDMAController, frameIndex,  XAXIVDMA_READ)) {
         	 xil_printf("vdma parking failed\n\r");
@@ -186,12 +191,12 @@ int main()
 			 input = getchar();
 			 if (input =='0' || input == '1' || input == '2' || input == '3' ) {
 				 // Check current Erosion state
-				 int erosionState = getErosionDegree();
-				 if (erosionState <-1 || erosionState > 3){
+				 //int erosionState = getErosionDegree();
+				 //if (erosionState <-1 || erosionState > 3){
 					 xil_printf("invalid erosion state\n\r");
-				 } else{
-					 erodeBunker(erosionState, input, 0, 0);
-				 }
+				 //} else{
+				//	 erodeBunker(erosionState, input, 0, 0);
+				// }
 			 } else {
 				 xil_printf(" please enter a valid bunker\n\r");
 			 }
@@ -213,7 +218,7 @@ int main()
 
          }
      }
-     cleanup_platform();
+     cleanup_platform();*/
 
     return 0;
 }

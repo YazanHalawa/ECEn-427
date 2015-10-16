@@ -19,10 +19,10 @@ static bool aliveAliens[55] = { 1 };
 static bool legsOut = true;
 static bool tankBulletFired = false;
 static bool aliensDirection = RIGHT;
-static int erosionDegree = -1;
+static int erosionDegree[48];
 static int farthestRightAlienColumn = 10;
 static int farthestLeftAlienColumn = 0;
-static int bottomRowAliens[11] = {44,45,46,47,48,49,50,51,52,53,54};
+static int bottomRowAliens[11];
 static int alienTicks = FIT_TICKS_BETWEEN_ALIEN_BLOCK_MOVEMENT_INIT;
 static bullet alienBullets[4];
 static int deadAlien = -1;
@@ -31,6 +31,48 @@ static int saucerDirection = 0;
 static point_t saucerPos = {0,40};
 static unsigned int score = 0;
 static unsigned saucerBonus = 0;
+static bool tankHit = false;
+static bool isGameOver = false;
+static int lives = 3;
+static bool beginningOfGame = true;
+static int bottomRow = 4;
+
+
+int getBottomRow() {
+	return bottomRow;
+}
+
+bool isInit(){
+	return beginningOfGame;
+}
+
+void setInit(bool newVal){
+	beginningOfGame = newVal;
+}
+
+int getLives(){
+	return lives;
+}
+
+void setLives(int newVal){
+	lives = newVal;
+}
+
+bool isEndOfGame(){
+	return isGameOver;
+}
+
+void setEndOfGame(bool newVal){
+	isGameOver = newVal;
+}
+
+bool isTankHit(){
+	return tankHit;
+}
+
+void setTankHit(bool newVal){
+	tankHit = newVal;
+}
 
 int getSaucerBonus(){
 	return saucerBonus;
@@ -193,13 +235,13 @@ void setBulletStatus(bool newStatus){
 }
 
 // Gets the degree of erosion of the bunker
-int getErosionDegree(){
-	return erosionDegree;
+int getErosionDegree(int index){
+	return erosionDegree[index];
 }
 
 // Sets the degree of erosion of the bunker
-void setErosionDegree(int newDegree){
-	erosionDegree = newDegree;
+void setErosionDegree(int index, int newDegree){
+	erosionDegree[index] = newDegree;
 }
 
 // Gets the x-coordinate of the tank
@@ -227,6 +269,16 @@ void initAliveAliens() {
 	// Initialize the alienBullets to be available for firing.
 	for (i=0; i<rowSize--; i++) {
 		alienBullets[i].is_in_flight = false;
+	}
+
+	for (i=0; i<11; i++) {
+		bottomRowAliens[i] = i+44;
+	}
+
+	xil_printf(" init bottomRowAliens: \n\r");
+	int j;
+	for (j=0; j<11; j++) {
+		xil_printf("  %d, ", bottomRowAliens[j]);
 	}
 }
 
@@ -301,13 +353,45 @@ void killAlien(unsigned int i){
 	// the next available alien above it. If there are no aliens above it,
 	// then the array is given a -1. The -1 serves as a flag that there is no available
 	// alien in the given column
-	for (row = rowSize--; row>=0; row--) {
+	for (row = rowSize-1; row>=0; row--) {
+		//xil_printf("row: %d", row);
+		//xil_printf("colSize: %d", colSize);
+		//xil_printf("col: %d", col);
+		//xil_printf(" -looking at %d\n\r", row*colSize + col);
 		if (aliveAliens[row*colSize + col]) {		// The given alien above alien i is alive
-			if (i == bottomRowAliens[col])			// The alien that was killed was in bottomRowAliens.
-				bottomRowAliens[col] = i-colSize;	// Maybe this should be row*colSize + col?
+			//xil_printf("not dead yet!\n\r");
+			if (i == bottomRowAliens[col]) 		// The alien that was killed was in bottomRowAliens.
+				bottomRowAliens[col] = row*colSize + col;	// Maybe this should be row*colSize + col? // before it was just col // RHS: i-colSize
 			columnDead = false;						// The exists an alien in the column.
 			break;
 		}
+	}
+
+	// If the column is dead, then the array needs to be given a -1.
+	// -1 is defined as COLUMN_DEAD.
+	if (columnDead) {
+		//xil_printf("collumn Dead\n\r");
+		bottomRowAliens[col] = COLUMN_DEAD;
+	}
+
+	/*xil_printf("bottomRowAliens: \n\r");
+	int j;
+	for (j=0; j<11; j++) {
+		xil_printf("%d, ", bottomRowAliens[j]);
+	}*/
+
+	int bottomRowDead = true;
+	for (row = bottomRow; row>=0; row--) {
+		for (col = 0; col<11; col++) {
+			if (aliveAliens[row*colSize + col]) {
+				bottomRow = row;
+				xil_printf("bottom row: %d\n\r", bottomRow);
+				bottomRowDead = false;
+				break;
+			}
+		}
+		if (!bottomRowDead)
+			break;
 	}
 
 	row = i/ALIEN_COLUMNS;
@@ -317,12 +401,6 @@ void killAlien(unsigned int i){
 		score += 20;
 	else
 		score += 10;
-
-	// If the column is dead, then the array needs to be given a -1.
-	// -1 is defined as COLUMN_DEAD.
-	if (columnDead) {
-		bottomRowAliens[col] = COLUMN_DEAD;
-	}
 }
 
 // Invert the bool that defines which way the alien legs are facing.
