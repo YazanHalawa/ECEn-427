@@ -239,7 +239,7 @@ static const int bunker_24x18[] =
 		packWord24(1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1),
 		packWord24(1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1),
 		packWord24(1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1),
-		packWord24(1,1,1,1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1,1,1,1),
+		packWord24(1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1),
 		packWord24(1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1),
 		packWord24(1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1),
 		packWord24(1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1),
@@ -252,30 +252,30 @@ static const int bunker_24x18[] =
 };
 
 // These are the blocks that comprise the bunker and each time a bullet
-// strikes one of these blocks, you erod the block as you sequence through
+// strikes one of these blocks, you erode the block as you sequence through
 // these patterns.
 static const int bunkerDamage1_6x6[] = {
-		packWord6(0,1,1,0,0,0),
-		packWord6(0,0,0,0,0,1),
-		packWord6(1,1,0,1,0,0),
-		packWord6(1,0,0,0,0,0),
-		packWord6(0,0,1,1,0,0),
-		packWord6(0,0,0,0,1,0)
+		packWord6(1,1,1,1,1,1),
+		packWord6(0,1,1,0,1,0),
+		packWord6(1,1,0,1,0,1),
+		packWord6(1,0,1,0,0,0),
+		packWord6(0,0,1,1,1,0),
+		packWord6(1,1,1,1,1,1)
 };
 
 static const int bunkerDamage2_6x6[] = {
-		packWord6(1,1,1,0,1,0),
-		packWord6(1,0,1,0,0,1),
+		packWord6(1,1,0,1,0,1),
+		packWord6(1,0,1,0,0,0),
 		packWord6(1,1,0,1,1,1),
-		packWord6(1,0,0,0,0,0),
+		packWord6(1,1,0,1,1,0),
 		packWord6(0,1,1,1,0,1),
-		packWord6(0,1,1,0,1,0)
+		packWord6(1,0,0,0,1,0)
 };
 
 static const int bunkerDamage3_6x6[] = {
 		packWord6(1,1,1,1,1,1),
 		packWord6(1,0,1,1,0,1),
-		packWord6(1,1,0,1,1,1),
+		packWord6(1,1,1,1,1,1),
 		packWord6(1,1,0,1,1,0),
 		packWord6(0,1,1,1,0,1),
 		packWord6(1,1,1,1,1,1)

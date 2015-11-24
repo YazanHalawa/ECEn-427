@@ -642,10 +642,11 @@ void alienFire() {
 int findSegNumRow(int bulletY, bool addInc){
 	int incr = 0;
 	if (addInc)
-		incr = 9;
-	if (bulletY <= BUNKER_ROW_START + BUNKER_SQUARE_LENGTH + incr){
+		incr = 10;
+	xil_printf("\tbullet_y: %d, range: %d\n\r", bulletY, BUNKER_ROW_START + BUNKER_SQUARE_LENGTH-incr);
+	if (bulletY < BUNKER_ROW_START + BUNKER_SQUARE_LENGTH-incr){
 		return 0;
-	} else if (bulletY <= BUNKER_ROW_START + BUNKER_SQUARE_LENGTH + BUNKER_SQUARE_LENGTH + incr){
+	} else if (bulletY < BUNKER_ROW_START + BUNKER_SQUARE_LENGTH + BUNKER_SQUARE_LENGTH-incr){
 		return 1;
 	} else {
 		return 2;
@@ -693,42 +694,54 @@ bool checkAlienBulletHits(int i) {
 		}
 	}
 
-	if (hit) {
+	if (hit) {	// alien bullet has hit something green
+		// the Tank has been hit
 		if (b.point.y >= (TANK_ROW_START - BULLET_PIXEL_HEIGHT)) {
 			disableBullet(i);
 			setTankHit(true);
 			return false;
 		}
+		// a bunker has been hit
 		else {
 			int segmentNumRow, segmentNumCol;
 			int bunkerNum;
 			int bulletX = getAlienBullet(i).point.x;
 			int bulletY = getAlienBullet(i).point.y;
+			// Figure out which bunker was hit by using the bullet's position
 			if (bulletX < 160){
+				xil_printf("hit bunker_0\n\r");
 				bunkerNum = BUNKER_0;
 				segmentNumCol = findSegNumCol(bulletX, 80);
-				segmentNumRow = findSegNumRow(bulletY, false);
+				segmentNumRow = findSegNumRow(bulletY, true);
 			}
 			else if (bulletX < 320){
+				xil_printf("hit bunker_1\n\r");
 				bunkerNum = BUNKER_1;
 				segmentNumCol = findSegNumCol(bulletX, 240);
-				segmentNumRow = findSegNumRow(bulletY, false);
+				segmentNumRow = findSegNumRow(bulletY, true);
 			}
 			else if (bulletX < 480){
+				xil_printf("hit bunker_2\n\r");
 				bunkerNum = BUNKER_2;
 				segmentNumCol = findSegNumCol(bulletX, 400);
-				segmentNumRow = findSegNumRow(bulletY, false);
+				segmentNumRow = findSegNumRow(bulletY, true);
 			}
 			else{
+				xil_printf("hit bunker_3\n\r");
 				bunkerNum = BUNKER_3;
 				segmentNumCol = findSegNumCol(bulletX, 560);
-				segmentNumRow = findSegNumRow(bulletY, false);
+				segmentNumRow = findSegNumRow(bulletY, true);
 			}
 
+			xil_printf("\tsegNumCol: %d, segNumRow = %d\r\n", segmentNumCol, segmentNumRow);
+			// Figure out which segment within the bunker was and get its erosion state
 			int segmentNum = (bunkerNum*BUNKER_SQUARE_LENGTH) + (segmentNumRow) * BUNKER_COUNT + segmentNumCol;
-			// Check current Erosion state
 			int erosionState = getErosionDegree(segmentNum);
+
+			// Erode the specified bunker
 			erodeBunker(erosionState, bunkerNum, segmentNumRow, segmentNumCol);
+
+			// Disable alien bullet
 			disableBullet(i);
 			return false;
 		}
@@ -792,7 +805,7 @@ void updateBullets() {
 void clearBullet() {
 	int row;
 	int rowPixel = getTankBulletPosition().y;
-	for (row = rowPixel-BULLET_PIXEL_HEIGHT; row < rowPixel; row++){
+	for (row = rowPixel-BULLET_PIXEL_HEIGHT+1; row < rowPixel; row++){
 		framePointer0[(row)*pixelWidth + getTankBulletPosition().x] = BLACK;
 		framePointer0[(row)*pixelWidth + getTankBulletPosition().x-1] = BLACK;
 	}
@@ -949,27 +962,28 @@ void checkHits() {
 		int segmentNumRow, segmentNumCol;
 		int bunkerNum;
 		int bulletX = getTankBulletPosition().x;
-		int bulletY = getTankBulletPosition().y;
+		int bulletY = getTankBulletPosition().y - 10;
 		if (bulletX < 160){
 			bunkerNum = BUNKER_0;
 			segmentNumCol = findSegNumCol(bulletX, 80);
-			segmentNumRow = findSegNumRow(bulletY, true);
+			segmentNumRow = findSegNumRow(bulletY, false);
 		}
 		else if (bulletX < 320){
 			bunkerNum = BUNKER_1;
 			segmentNumCol = findSegNumCol(bulletX, 240);
-			segmentNumRow = findSegNumRow(bulletY, true);
+			segmentNumRow = findSegNumRow(bulletY, false);
 		}
 		else if (bulletX < 480){
 			bunkerNum = BUNKER_2;
 			segmentNumCol = findSegNumCol(bulletX, 400);
-			segmentNumRow = findSegNumRow(bulletY, true);
+			segmentNumRow = findSegNumRow(bulletY, false);
 		}
 		else{
 			bunkerNum = BUNKER_3;
 			segmentNumCol = findSegNumCol(bulletX, 560);
-			segmentNumRow = findSegNumRow(bulletY, true);
+			segmentNumRow = findSegNumRow(bulletY, false);
 		}
+		xil_printf("\tsegNumCol: %d, segNumRow = %d\r\n", segmentNumCol, segmentNumRow);
 
 		int segmentNum = (bunkerNum*BUNKER_SQUARE_LENGTH) + (segmentNumRow) * BUNKER_COUNT + segmentNumCol;
 		// Check current Erosion state
